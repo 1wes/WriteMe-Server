@@ -1,8 +1,9 @@
 const express=require('express');
 const router=express.Router();
 const dbConnection=require('../db');
-const hashPasssword=require('../utils/password');
+const {hashPasssword, comparePassword}=require('../utils/password');
 const generateUserId=require('../utils/userId');
+const generateToken=require('../utils/token');
 
 router.use((req, res, next)=>{
     next();
@@ -33,12 +34,39 @@ router.post("/register", async(req, res)=>{
         console.log(result);
     })
 
-    dbConnection.end();
+    // dbConnection.end();
 
 });
 
 router.post("/login", (req, res)=>{
 
+    const {email, password}=req.body;
+
+    const selectStatement=`SELECT password FROM users WHERE email=?`;
+
+    dbConnection.query(selectStatement, email, async(err, result)=>{
+
+        if(err){
+            console.log(err);
+        }
+
+        if(result.length==0){
+
+            return res.send("User not found")
+        }
+
+        let passwordMatch=await comparePassword(password, result[0].password)
+
+        if(passwordMatch){
+
+            return res.send("Logged in")
+        }else{
+
+            return res.send("Wrong Email or Password");
+
+            
+        }
+    })
 });
 
 module.exports=router;
