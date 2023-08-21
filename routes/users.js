@@ -34,8 +34,6 @@ router.post("/register", async(req, res)=>{
         console.log(result);
     })
 
-    // dbConnection.end();
-
 });
 
 router.post("/login", (req, res)=>{
@@ -52,19 +50,19 @@ router.post("/login", (req, res)=>{
 
         if(result.length==0){
 
-            return res.send("User not found")
+            return res.sendStatus(404)
         }
 
         let passwordMatch=await comparePassword(password, result[0].password)
 
         if(passwordMatch){
 
-            return res.send("Logged in")
+            let token=generateToken(email);
+
+            return res.send(token)
         }else{
 
-            return res.send("Wrong Email or Password");
-
-            
+            return res.sendStatus(403);
         }
     })
 });
