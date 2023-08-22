@@ -59,7 +59,14 @@ router.post("/login", (req, res)=>{
 
             let token=generateToken(email);
 
-            return res.send(token)
+            res.cookie("authorizationToken", token, {
+                httpOnly:true,
+                secure:true,
+                sameSite:'lax'
+            });
+
+            res.sendStatus(200);
+
         }else{
 
             return res.sendStatus(403);
