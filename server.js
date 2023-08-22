@@ -7,7 +7,10 @@ const clients=require("./routes/users");
 
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
-app.use(cors({}));
+app.use(cors({
+    origin:"http://localhost:3000",
+    credentials:true
+}));
 
 app.use("/api", ordersAPI);
 app.use("/api/user", clients);
