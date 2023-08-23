@@ -74,4 +74,9 @@ router.post("/login", (req, res)=>{
     })
 });
 
+router.post("/forgot-password", (req, res)=>{
+
+    res.send("am the forgot-apssword page");
+})
+
 module.exports=router;
