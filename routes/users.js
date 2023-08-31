@@ -13,27 +13,43 @@ router.post("/register", async(req, res)=>{
     
     const {firstName, lastName, email, dialCode, phoneNumber, confirmPassword}=req.body;
 
-    let userId=generateUserId();
+    const checkEmailStatement=`SELECT COUNT(email) AS count FROM users WHERE email=?`;
 
-    const phone=dialCode+phoneNumber;
-
-    const hashedPassword=await hashPasssword(confirmPassword);
-
-    let userInfo=[
-        userId, firstName, lastName, email, phone, hashedPassword
-    ]
-
-    let sqlStatement=`INSERT INTO users (uuid, first_name, last_name, email, phone_no, password) VALUES (?)`;
-
-    dbConnection.query(sqlStatement, [userInfo], (err, result)=>{
+    dbConnection.query(checkEmailStatement, email, async (err, result)=>{
 
         if(err){
-            console.log(err)
+            console.log(err);
         }
 
-        console.log(result);
-    })
+        if(result[0].count>0){            
+            res.sendStatus(403);
+        }else{
 
+            let userId=generateUserId();
+
+            const phone=dialCode+phoneNumber;
+        
+            const hashedPassword=await hashPasssword(confirmPassword);
+        
+            let userInfo=[
+                userId, firstName, lastName, email, phone, hashedPassword
+            ]
+        
+            let sqlStatement=`INSERT INTO users (uuid, first_name, last_name, email, phone_no, password) VALUES (?)`;
+        
+            dbConnection.query(sqlStatement, [userInfo], (err, result)=>{
+        
+                if(err){
+                    console.log(err)
+                }
+
+                res.sendStatus(200);
+            })
+
+            
+        }
+
+    })
 });
 
 router.post("/login", (req, res)=>{
