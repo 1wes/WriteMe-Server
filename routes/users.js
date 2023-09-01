@@ -4,6 +4,7 @@ const dbConnection=require('../db');
 const {hashPasssword, comparePassword}=require('../utils/password');
 const generateUserId=require('../utils/userId');
 const generateToken=require('../utils/token');
+const verifyToken=require('../middleware/cookie-validation.js');
 
 router.use((req, res, next)=>{
     next();
@@ -90,9 +91,29 @@ router.post("/login", (req, res)=>{
     })
 });
 
+router.get("/user-details", verifyToken, (req, res)=>{
+
+    switch(statusCode){
+
+        case 200:
+            let getUserName=`SELECT first_name, last_name FROM  users WHERE email=?`;
+
+            dbConnection.query(getUserName, tokenInfo.email, (err, result)=>{
+
+                if(err){
+                    console.log(err);
+                }
+
+                const userName=`${result[0].first_name} ${result[0].last_name}`;
+
+                res.send(userName);                
+            })
+    }
+})
+
 router.post("/forgot-password", (req, res)=>{
 
-    res.send("am the forgot-apssword page");
+
 })
 
 module.exports=router;
