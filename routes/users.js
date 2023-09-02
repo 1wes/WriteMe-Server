@@ -107,7 +107,19 @@ router.get("/user-details", verifyToken, (req, res)=>{
                 const userName=`${result[0].first_name} ${result[0].last_name}`;
 
                 res.send(userName);            
-            })
+            });
+
+            break;
+
+        case 401:
+            res.sendStatus(401);
+
+            break;
+
+        case 403:
+            res.sendStatus(403);
+
+            break;
     }
 });
 
