@@ -119,6 +119,27 @@ router.get("/logout", verifyToken, (req, res)=>{
 
         res.sendStatus(200);
     }
+});
+
+router.get("/check-token", verifyToken, (req, res)=>{
+
+    switch(statusCode){
+
+        case 200:
+            res.sendStatus(200);
+
+            break;
+
+        case 401:
+            res.sendStatus(401);
+
+            break;
+        
+        case 403:
+            res.sendStatus(403);
+
+            break;
+    }
 })
 
 router.post("/forgot-password", (req, res)=>{
