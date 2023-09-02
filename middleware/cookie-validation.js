@@ -34,13 +34,11 @@ let verifyToken=(req, res, next)=>{
             statusCode=200;
 
             tokenInfo=tokenIsValid;
-
+                
             next();
         }else{
 
-            statusCode=errorInfo.statusCode;
-
-            errorMessage=errorInfo.message;
+            statusCode=401;
 
             next();
         }
