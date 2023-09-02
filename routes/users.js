@@ -106,8 +106,18 @@ router.get("/user-details", verifyToken, (req, res)=>{
 
                 const userName=`${result[0].first_name} ${result[0].last_name}`;
 
-                res.send(userName);                
+                res.send(userName);            
             })
+    }
+});
+
+router.get("/logout", verifyToken, (req, res)=>{
+
+    if(statusCode){
+
+        res.clearCookie("authorizationToken", {domain:"localhost", path:"/"});
+
+        res.sendStatus(200);
     }
 })
 
