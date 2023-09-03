@@ -13,32 +13,26 @@ let verifyToken=(req, res, next)=>{
 
                 if(err){
 
-                    errorObject={
-                        statusCode:401, 
-                        message:err.message
-                    }
+                    return err.message;
 
-                    res.clearCookie("authorizationToken", {domain:'localhost', path:'/'});
-
-                    return new Error(errorObject);
+                }else{
+                    return decoded;
                 }
-
-                return decoded;
             })
         }
 
-        const tokenIsValid=isTokenValid();
+        const tokenStatus=isTokenValid();
 
-        if(tokenIsValid){
+        if(tokenStatus=='jwt expired'){
 
-            statusCode=200;
-
-            tokenInfo=tokenIsValid;
-                
+            statusCode=401;
+                            
             next();
         }else{
 
-            statusCode=401;
+            statusCode=200;
+
+            tokenInfo=tokenStatus;
 
             next();
         }
