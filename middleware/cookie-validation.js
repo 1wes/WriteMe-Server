@@ -13,26 +13,31 @@ let verifyToken=(req, res, next)=>{
 
                 if(err){
 
-                    return err.message;
+                    return response={
+                        code:401,
+                        message:err.message
+                    }
 
                 }else{
-                    return decoded;
+                    return response={
+                        code:200,
+                        message:decoded
+                    }
                 }
             })
         }
-
         const tokenStatus=isTokenValid();
 
-        if(tokenStatus=='jwt expired'){
+        if(tokenStatus.code==200){
 
-            statusCode=401;
+            statusCode=tokenStatus.code;
+
+            tokenInfo=tokenStatus.message
                             
             next();
         }else{
 
-            statusCode=200;
-
-            tokenInfo=tokenStatus;
+            statusCode=tokenStatus.code;
 
             next();
         }
