@@ -14,7 +14,7 @@ router.use((req, res, next)=>{
 
 router.get("/all", verifyToken, (req, res)=>{ 
 
-    const getAllOrder=`SELECT order_id,subject, status, date_deadline, first_name,last_name FROM orders RIGHT JOIN users ON orders.created_by=uuid WHERE uuid=${tokenInfo.uuid}`;
+    const getAllOrder=`SELECT orders.id, order_id,subject, status, date_deadline, first_name,last_name FROM orders RIGHT JOIN users ON orders.created_by=uuid WHERE uuid=${tokenInfo.uuid}`;
 
     dbConnection.query(getAllOrder, (err, result)=>{
 
