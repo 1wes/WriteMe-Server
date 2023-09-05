@@ -14,7 +14,7 @@ app.use(cors({
 }));
 app.use(cookieParser());
 
-app.use("/api", ordersAPI);
+app.use("/api/orders", ordersAPI);
 app.use("/api/user", clients);
 
 app.listen(port, ()=>{
