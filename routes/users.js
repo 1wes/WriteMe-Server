@@ -2,7 +2,7 @@ const express=require('express');
 const router=express.Router();
 const dbConnection=require('../db');
 const {hashPasssword, comparePassword}=require('../utils/password');
-const generateUserId=require('../utils/userId');
+const generateId=require('../utils/generateId');
 const generateToken=require('../utils/token');
 const verifyToken=require('../middleware/cookie-validation.js');
 
@@ -26,7 +26,7 @@ router.post("/register", async(req, res)=>{
             res.sendStatus(403);
         }else{
 
-            let userId=generateUserId();
+            let userId=generateId(100000);
 
             const phone=dialCode+phoneNumber;
         
