@@ -14,31 +14,47 @@ router.use((req, res, next)=>{
 
 router.get("/all", verifyToken, (req, res)=>{ 
 
-    const getAllOrder=`SELECT orders.id, order_id,subject, status, date_deadline, first_name,last_name FROM orders RIGHT JOIN users ON orders.created_by=uuid WHERE uuid=${tokenInfo.uuid}`;
+    switch(statusCode){
 
-    dbConnection.query(getAllOrder, (err, result)=>{
+        case 200:
+            const getAllOrder=`SELECT orders.id, order_id,subject, status, date_deadline, first_name,last_name FROM orders RIGHT JOIN users ON orders.created_by=uuid WHERE uuid=${tokenInfo.uuid}`;
 
-        if(err){
-            console.log(err);
-        }
-
-        const getOrderStatus=(status)=>{
-
-            return active=result.filter(orders=>
-                orders.status==status);
-        }
+            dbConnection.query(getAllOrder, (err, result)=>{
         
-        let userInfo={
-            name:`${result[0].first_name} ${result[0].last_name}`,
-            allOrders:result.length,
-            activeOrders:getOrderStatus("Active").length,
-            cancelledOrders:getOrderStatus("Cancelled").length,
-            completedOrders:getOrderStatus("Completed").length,
-            orders:result
-        }
+                if(err){
+                    console.log(err);
+                }
+        
+                const getOrderStatus=(status)=>{
+        
+                    return active=result.filter(orders=>
+                        orders.status==status);
+                }
+                
+                let userInfo={
+                    name:`${result[0].first_name} ${result[0].last_name}`, 
+                    allOrders:result.length,
+                    activeOrders:getOrderStatus("Active").length,
+                    cancelledOrders:getOrderStatus("Cancelled").length,
+                    completedOrders:getOrderStatus("Completed").length,
+                    orders:result
+                }
+        
+                res.send(userInfo);
+            })
 
-        res.send(userInfo);
-    })
+            break;
+        
+        case 401:
+            res.sendStatus(401);
+    
+            break;
+    
+        case 403:
+            res.sendStatus(403);
+    
+            break;
+    }
 });
 
 router.post("/new", verifyToken, (req, res)=>{
