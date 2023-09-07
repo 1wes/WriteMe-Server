@@ -33,11 +33,11 @@ router.get("/all", verifyToken, (req, res)=>{
                 
                 let userInfo={
                     name:`${result[0].first_name} ${result[0].last_name}`, 
-                    allOrders:result.length,
+                    allOrders:result[0].id==null?0:result.length,
                     activeOrders:getOrderStatus("Active").length,
                     cancelledOrders:getOrderStatus("Cancelled").length,
                     completedOrders:getOrderStatus("Completed").length,
-                    orders:result
+                    orders:result[0].id==null?[]:result
                 }
         
                 res.send(userInfo);
