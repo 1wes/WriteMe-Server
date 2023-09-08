@@ -89,7 +89,7 @@ router.post("/new", verifyToken, (req, res)=>{
                     });
                 }
 
-                const {gradeLevel, subject, instructions, pagesOrwords, amount, deadline, time, fileName}=fields;
+                const {gradeLevel, subject, instructions, pagesOrwords, amount, deadline, time, fileName, sources, style}=fields;
 
                 let orderId=generateId(100000000);
 
@@ -106,6 +106,8 @@ router.post("/new", verifyToken, (req, res)=>{
                     createdBy,
                     subject[0],
                     gradeLevel[0],
+                    style[0],
+                    sources[0],
                     file,
                     instructions[0],
                     pagesOrwords[0],
@@ -115,7 +117,7 @@ router.post("/new", verifyToken, (req, res)=>{
                     status
                 ]
 
-                const createOrder="INSERT INTO orders (order_id, created_by, subject, level, file, instructions, words_or_pages, amount, date_deadline, time_deadline, status) VALUES (?)";
+                const createOrder="INSERT INTO orders (order_id, created_by, subject, level, ref_style, sources, file, instructions, words_or_pages, amount, date_deadline, time_deadline, status) VALUES (?)";
 
                 dbConnection.query(createOrder, [orderDetails], (err)=>{
 
@@ -134,7 +136,7 @@ router.post("/new", verifyToken, (req, res)=>{
             break;
 
         case 403:
-            res.sendStatus(403);
+            res.sendStatus(403); 
 
             break;
         
