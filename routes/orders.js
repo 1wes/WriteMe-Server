@@ -142,11 +142,76 @@ router.post("/new", verifyToken, (req, res)=>{
         
     }
 
-} )
+} );
 
-router.get("/order", (req, res)=>{
+router.post("/revision", verifyToken, (req, res)=>{
 
-    dbConnection.query();
+    switch(statusCode){
+
+        case 200:
+            const {orderId, modificationType, modificationReason}=req.body;
+
+            let modification_id=generateId(100000000);
+            let order_id=orderId;
+            let type=modificationType;
+            let reason=modificationReason
+
+            let orderModifications=[
+                modification_id,
+                order_id,
+                type,
+                reason
+            ];
+
+            const modifyOrder=`INSERT INTO orderModification (modification_id, order_id, modification_type, reason) VALUES (?)`;
+
+            dbConnection.query(modifyOrder, [orderModifications], (err, result)=>{
+
+                if(err){
+                    console.log(err);
+                }else{
+                    res.sendStatus(200);
+                }
+
+                
+            })
+
+            break;
+
+        case 401:
+            res.sendStatus(401);
+
+            break;
+
+        case 403:
+            res.sendStatus(403);
+
+            break;
+    }
+  
+})
+
+router.post("/cancel-order", verifyToken, (req, res)=>{
+
+
+    switch(statusCode){
+
+        case 200:
+
+            res.sendStatus(200)
+
+            break;
+
+        case 401:
+            res.sendStatus(401);
+
+            break;
+
+        case 403:
+            res.sendStatus(403);
+
+            break;
+    }
 
 });
 
