@@ -82,7 +82,10 @@ router.post("/login", (req, res)=>{
                 sameSite:'lax'
             });
 
-            res.sendStatus(200);
+            res.json({
+                code:200, 
+                role:result[0].role
+            })
 
         }else{
 
