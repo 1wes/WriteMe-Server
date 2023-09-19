@@ -59,7 +59,7 @@ router.post("/login", (req, res)=>{
 
     const {email, password}=req.body;
 
-    const selectStatement=`SELECT password, uuid, role FROM users WHERE email=?`;
+    const selectStatement=`SELECT first_name, last_name, password, uuid, role FROM users WHERE email=?`;
 
     dbConnection.query(selectStatement, email, async(err, result)=>{
 
@@ -76,7 +76,7 @@ router.post("/login", (req, res)=>{
 
         if(passwordMatch){
 
-            let token=generateToken(email, result[0].uuid, result[0].role);
+            let token=generateToken(email, result[0].uuid, result[0].role, result[0].first_name, result[0].last_name);
 
             res.cookie("authorizationToken", token, {
                 httpOnly:true,
