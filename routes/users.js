@@ -31,12 +31,14 @@ router.post("/register", async(req, res)=>{
             const phone=dialCode+phoneNumber;
         
             const hashedPassword=await hashPasssword(confirmPassword);
+
+            const role='user';
         
             let userInfo=[
-                userId, firstName, lastName, email, phone, hashedPassword
+                userId, firstName, lastName, email, phone, hashedPassword, role
             ]
         
-            let sqlStatement=`INSERT INTO users (uuid, first_name, last_name, email, phone_no, password) VALUES (?)`;
+            let sqlStatement=`INSERT INTO users (uuid, first_name, last_name, email, phone_no, password, role) VALUES (?)`;
         
             dbConnection.query(sqlStatement, [userInfo], (err, result)=>{
         
