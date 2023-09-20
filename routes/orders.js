@@ -12,6 +12,59 @@ router.use((req, res, next)=>{
     next();
 })
 
+const getOrderStatus=(status, result)=>{
+        
+    return active=result.filter(orders=>
+        orders.status==status);
+}
+
+router.get("/admin", verifyToken, (req, res)=>{
+
+    switch(statusCode){
+
+        case 200:
+
+            if(tokenInfo.role==="Admin"){
+                const username=`${tokenInfo.firstName} ${tokenInfo.lastName}`
+            
+                const allOrders=`SELECT orders.id, order_id, subject, status, date_deadline, first_name, last_name FROM orders INNER JOIN users ON orders.created_by=uuid`;
+                
+                dbConnection.query(allOrders, (err, result)=>{
+    
+                    if(err){
+                        console.log(err);
+                    }
+    
+                    const orders={
+                        username:username,
+                        totalOrders:result.length,
+                        allActiveOrders:getOrderStatus('Active', result).length,
+                        allCancelledOrders:getOrderStatus('Cancelled', result).length,
+                        allCompletedOrders:getOrderStatus('Completed', result).length,
+                        allOrders:result.length==0?[]:result
+                    }
+    
+                    res.send(orders);
+    
+                });
+            }else{
+                return res.sendStatus(401);
+            }
+
+            break;
+
+        case 401:
+            res.sendStatus(401);
+
+            break; 
+
+        case 403:
+            res.sendStatus(403);
+
+            break;
+    }
+})
+
 router.get("/all", verifyToken, (req, res)=>{ 
 
     switch(statusCode){
@@ -24,19 +77,13 @@ router.get("/all", verifyToken, (req, res)=>{
                 if(err){
                     console.log(err);
                 }
-        
-                const getOrderStatus=(status)=>{
-        
-                    return active=result.filter(orders=>
-                        orders.status==status);
-                }
                 
                 let userInfo={
                     name:`${result[0].first_name} ${result[0].last_name}`, 
                     allOrders:result[0].id==null?0:result.length,
-                    activeOrders:getOrderStatus("Active").length,
-                    cancelledOrders:getOrderStatus("Cancelled").length,
-                    completedOrders:getOrderStatus("Completed").length,
+                    activeOrders:getOrderStatus("Active", result).length,
+                    cancelledOrders:getOrderStatus("Cancelled", result).length,
+                    completedOrders:getOrderStatus("Completed", result).length,
                     orders:result[0].id==null?[]:result
                 }
         
