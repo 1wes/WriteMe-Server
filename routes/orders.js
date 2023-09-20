@@ -27,13 +27,15 @@ router.get("/admin", verifyToken, (req, res)=>{
             if(tokenInfo.role==="Admin"){
                 const username=`${tokenInfo.firstName} ${tokenInfo.lastName}`
             
-                const allOrders=`SELECT orders.id, order_id, subject, status, date_deadline, first_name, last_name FROM orders INNER JOIN users ON orders.created_by=uuid`;
+                const allOrders=`SELECT orders.*, first_name, last_name FROM orders INNER JOIN users ON orders.created_by=uuid`;
                 
                 dbConnection.query(allOrders, (err, result)=>{
     
                     if(err){
                         console.log(err);
                     }
+
+                    console.log(result)
     
                     const orders={
                         username:username,
