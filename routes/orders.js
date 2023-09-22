@@ -65,6 +65,49 @@ router.get("/admin", verifyToken, (req, res)=>{
     }
 })
 
+router.get("/order/:id", verifyToken, (req, res)=>{
+
+    switch(statusCode){
+
+        case 200:
+
+            if(tokenInfo.role==="Admin"){
+
+                const id=req.params.id;
+
+                const username=`${tokenInfo.firstName} ${tokenInfo.lastName}`;
+
+                const row=`SELECT orders.*, first_name, last_name from orders RIGHT JOIN users on created_by=uuid where order_id=?`;
+
+                dbConnection.query(row, id, (err, result)=>{
+
+                    if(err){
+                        console.log(err);
+                    }
+
+                    const order={...result[0], username:username}
+
+                    res.send(order);
+
+                })
+            }else{
+                return res.sendStatus(401);
+            }
+
+            break;
+        
+        case 401:
+            res.sendStatus(401);
+
+            break;
+
+        case 403:
+            res.sendStatus(403);
+
+            break;
+    }
+})
+
 router.get("/all", verifyToken, (req, res)=>{ 
 
     switch(statusCode){
