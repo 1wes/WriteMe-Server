@@ -77,7 +77,7 @@ router.get("/order/:id", verifyToken, (req, res)=>{
 
                 const username=`${tokenInfo.firstName} ${tokenInfo.lastName}`;
 
-                const row=`SELECT orders.*, first_name, last_name from orders RIGHT JOIN users on created_by=uuid where order_id=?`;
+                const row=`SELECT orders.*, first_name, last_name, email from orders RIGHT JOIN users on created_by=uuid where order_id=?`;
 
                 dbConnection.query(row, id, (err, result)=>{
 
