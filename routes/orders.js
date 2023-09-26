@@ -79,13 +79,21 @@ router.get("/order/:id", verifyToken, (req, res)=>{
 
                 const row=`SELECT orders.*, first_name, last_name, email from orders RIGHT JOIN users on created_by=uuid where order_id=?`;
 
+                const attachments=[];
+
                 dbConnection.query(row, id, (err, result)=>{
 
                     if(err){
                         console.log(err);
                     }
 
-                    const order={...result[0], username:username}
+                    if(result[0].file){
+
+                        attachments.push(result[0].file);
+
+                    }
+
+                    const order={...result[0], username:username, attachedFiles:attachments}
 
                     res.send(order);
 
@@ -96,6 +104,39 @@ router.get("/order/:id", verifyToken, (req, res)=>{
 
             break;
         
+        case 401:
+            res.sendStatus(401);
+
+            break;
+
+        case 403:
+            res.sendStatus(403);
+
+            break;
+    }
+});
+
+router.get("/order/files/:filename", verifyToken, (req, res)=>{
+    
+    switch(statusCode){
+
+        case 200:
+
+            if(tokenInfo.role==="Admin"){
+
+                const rootPath=path.dirname(__dirname);
+
+                const filePath=path.join(rootPath, "public", "files");
+
+                const file=path.join(filePath, req.params.filename);
+
+                res.sendFile(file);
+            }else{
+                res.sendStatus(401);
+            }
+
+            break;
+
         case 401:
             res.sendStatus(401);
 
