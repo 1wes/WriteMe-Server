@@ -147,6 +147,46 @@ router.get("/order/files/:filename", verifyToken, (req, res)=>{
 
             break;
     }
+});
+
+router.put("/order/update/:orderId", verifyToken, (req, res)=>{
+
+    switch(statusCode){
+
+        case 200:
+
+            if(tokenInfo.role==="Admin"){
+
+                let {status}=req.body;
+
+                let {orderId}=req.params;
+
+                const updateStatement=`UPDATE orders SET status='${status}' WHERE order_id=?`;
+
+                dbConnection.query(updateStatement, orderId, (err)=>{
+
+                    if(err){
+                        console.log(err)
+                    }else{
+                        res.sendStatus(200);
+                    }
+                })
+            }else{
+                res.sendStatus(401);
+            }
+
+            break;
+
+        case 401:
+            res.sendStatus(401);
+
+            break;
+
+        case 403:
+            res.sendStatus(403);
+
+            break;
+    }
 })
 
 router.get("/all", verifyToken, (req, res)=>{ 
