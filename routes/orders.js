@@ -194,7 +194,7 @@ router.get("/all", verifyToken, (req, res)=>{
     switch(statusCode){
 
         case 200:
-            const getAllOrder=`SELECT orders.id, order_id,subject, status, date_deadline, first_name,last_name FROM orders RIGHT JOIN users ON orders.created_by=uuid WHERE uuid=${tokenInfo.uuid}`;
+            const getAllOrder=`SELECT orders.id, order_id,topic, status, date_deadline, first_name,last_name FROM orders RIGHT JOIN users ON orders.created_by=uuid WHERE uuid=${tokenInfo.uuid}`;
 
             dbConnection.query(getAllOrder, (err, result)=>{
         
@@ -260,7 +260,7 @@ router.post("/new", verifyToken, (req, res)=>{
                     });
                 }
 
-                const {gradeLevel, subject, instructions, pagesOrwords, amount, deadline, time, fileName, sources, style}=fields;
+                const {gradeLevel, subject, instructions, pagesOrwords, amount, deadline, time, fileName, sources, style, topic}=fields;
 
                 let orderId=generateId(100000000);
 
@@ -281,14 +281,15 @@ router.post("/new", verifyToken, (req, res)=>{
                     sources[0],
                     file,
                     instructions[0],
+                    topic[0],
                     pagesOrwords[0],
                     amount[0],
                     deadline[0],
                     time[0],
                     status
-                ]
+                ];
 
-                const createOrder="INSERT INTO orders (order_id, created_by, subject, level, ref_style, sources, file, instructions, words_or_pages, amount, date_deadline, time_deadline, status) VALUES (?)";
+                const createOrder="INSERT INTO orders (order_id, created_by, subject, level, ref_style, sources, file, instructions, topic, words_or_pages, amount, date_deadline, time_deadline, status) VALUES (?)";
 
                 dbConnection.query(createOrder, [orderDetails], (err)=>{
 
