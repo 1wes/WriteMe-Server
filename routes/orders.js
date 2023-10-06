@@ -243,21 +243,39 @@ router.post("/new", verifyToken, (req, res)=>{
                     console.log(err);
                 }
 
-                if(files.file){
-                    const file=files.file[0];
-                
-                    const oldPath=file.filepath;
-    
-                    const newPath=`${path.join(rootPath, "public", "files")}/${file.originalFilename}`;
-    
-                    let fileData=fs.readFileSync(oldPath);
+                const folder=`folder${generateId(100000)}`
 
-                    fs.writeFile(newPath, fileData, (err)=>{
+                if(files.attachedFiles){
+
+                    fs.mkdir(path.join(rootPath, "public", "files", folder), (err)=>{
+
                         if(err){
-                            console.log(err);
+                            console.log(err)
                         }
-    
                     });
+
+                    for(let i=0; i<files.attachedFiles.length; i++){
+
+                        const file=files.attachedFiles[i];
+
+                        const oldpath=file.filepath;
+
+                        const newPath=`${path.join(rootPath, "public", "files", folder)}/${file.originalFilename}`;
+                                                
+                        fs.readFile(oldpath, (err, data)=>{
+
+                            if(err){
+                                console.log(err)
+                            }
+
+                            fs.writeFile(newPath, oldpath, (err)=>{
+
+                                if(err){
+                                    console.log(err);
+                                }
+                            })
+                        });
+                    }
                 }
 
                 const {gradeLevel, subject, instructions, pagesOrwords, amount, deadline, time, fileName, sources, style, topic}=fields;
@@ -268,9 +286,7 @@ router.post("/new", verifyToken, (req, res)=>{
 
                 let createdBy=tokenInfo.uuid;
 
-                let file;
-
-                files.file?file=fileName[0]:''
+                files=files.attachedFiles?folder:"";
 
                 const orderDetails=[
                     orderId,
@@ -279,7 +295,7 @@ router.post("/new", verifyToken, (req, res)=>{
                     gradeLevel[0],
                     style[0],
                     sources[0],
-                    file,
+                    files,
                     instructions[0],
                     topic[0],
                     pagesOrwords[0],
@@ -289,7 +305,7 @@ router.post("/new", verifyToken, (req, res)=>{
                     status
                 ];
 
-                const createOrder="INSERT INTO orders (order_id, created_by, subject, level, ref_style, sources, file, instructions, topic, words_or_pages, amount, date_deadline, time_deadline, status) VALUES (?)";
+                const createOrder="INSERT INTO orders (order_id, created_by, subject, level, ref_style, sources, files, instructions, topic, words_or_pages, amount, date_deadline, time_deadline, status) VALUES (?)";
 
                 dbConnection.query(createOrder, [orderDetails], (err)=>{
 
