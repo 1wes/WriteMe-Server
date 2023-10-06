@@ -87,16 +87,18 @@ router.get("/order/:id", verifyToken, (req, res)=>{
                         console.log(err);
                     }
 
-                    if(result[0].file){
+                    let order;
 
-                        attachments.push(result[0].file);
+                    if(result[0].files){
 
+                        attachments.push(result[0].files);
+
+                        fs.readdir(path.join(path.dirname(__dirname), "public", "files", result[0].files), (err, data)=>{
+                            order={...result[0], username:username, attachedFiles:attachments, fileNames:data}
+
+                            res.send(order);
+                        })
                     }
-
-                    const order={...result[0], username:username, attachedFiles:attachments}
-
-                    res.send(order);
-
                 })
             }else{
                 return res.sendStatus(401);
