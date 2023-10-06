@@ -98,6 +98,9 @@ router.get("/order/:id", verifyToken, (req, res)=>{
 
                             res.send(order);
                         })
+                    }else{
+                        order={...result[0], username:username, attachedFiles:attachments}
+                        res.send(order)
                     }
                 })
             }else{
@@ -118,7 +121,7 @@ router.get("/order/:id", verifyToken, (req, res)=>{
     }
 });
 
-router.get("/order/files/:filename", verifyToken, (req, res)=>{
+router.get("/order/files/:folder/:fileName", verifyToken, (req, res)=>{
     
     switch(statusCode){
 
@@ -128,9 +131,9 @@ router.get("/order/files/:filename", verifyToken, (req, res)=>{
 
                 const rootPath=path.dirname(__dirname);
 
-                const filePath=path.join(rootPath, "public", "files");
+                const filePath=path.join(rootPath, "public", "files", req.params.folder);
 
-                const file=path.join(filePath, req.params.filename);
+                const file=path.join(filePath, req.params.fileName);
 
                 res.sendFile(file);
             }else{
@@ -252,7 +255,7 @@ router.post("/new", verifyToken, (req, res)=>{
                     fs.mkdir(path.join(rootPath, "public", "files", folder), (err)=>{
 
                         if(err){
-                            console.log(err)
+                            console.log(err);
                         }
                     });
 
@@ -270,7 +273,7 @@ router.post("/new", verifyToken, (req, res)=>{
                                 console.log(err)
                             }
 
-                            fs.writeFile(newPath, oldpath, (err)=>{
+                            fs.writeFile(newPath, data, (err)=>{
 
                                 if(err){
                                     console.log(err);
@@ -280,7 +283,7 @@ router.post("/new", verifyToken, (req, res)=>{
                     }
                 }
 
-                const {gradeLevel, subject, instructions, pagesOrwords, amount, deadline, time, fileName, sources, style, topic}=fields;
+                const {gradeLevel, subject, instructions, pagesOrwords, amount, deadline, time, sources, style, topic}=fields;
 
                 let orderId=generateId(100000000);
 
