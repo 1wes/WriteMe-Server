@@ -382,6 +382,45 @@ router.post("/revision", verifyToken, (req, res)=>{
             break;
     }
   
+});
+
+
+router.post("/order/send/:id/", verifyToken, (req, res) => {
+    
+    switch (statusCode){
+
+        case 200:
+
+            if (tokenInfo.role === "Admin") {
+
+                const form = new formidable.IncomingForm();
+
+                form.parse(req, (err, fields, files) => {
+                    
+                    if (err) {
+                        console.log(err);
+                    }
+
+                    console.log(fields);
+                    console.log(files);
+                })
+                
+            } else {
+                res.sendStatus(401);
+            }
+
+            break;
+
+        case 401:
+            res.sendStatus(401);;;
+
+            break;
+        
+        case 403:
+            res.sendStatus(403);
+
+            break;
+    }
 })
 
 router.post("/cancel-order", verifyToken, (req, res)=>{
