@@ -10,6 +10,6 @@ module.exports={
     db_name:DB_NAME,
     secret_key:TOKEN_SECRET_KEY,
     client_origin: CLIENT_ORIGIN_URL,
-    email: EMAIL,
+    senderEmail: EMAIL,
     password:PASSWORD
 }
