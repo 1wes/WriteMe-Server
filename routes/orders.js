@@ -6,7 +6,9 @@ const app=express();
 const verifyToken=require('../middleware/cookie-validation.js');
 const formidable=require('formidable');
 const fs=require('fs');
-const generateId=require('../utils/generateId');
+const generateId = require('../utils/generateId');
+const transporter = require('../utils/mail');
+const { senderEmail } = require('../env-config');
 
 router.use((req, res, next)=>{
     next();
@@ -395,16 +397,95 @@ router.post("/order/send/:id/", verifyToken, (req, res) => {
 
                 const form = new formidable.IncomingForm();
 
+                const rootPath=(path.dirname(__dirname));
+
                 form.parse(req, (err, fields, files) => {
                     
                     if (err) {
                         console.log(err);
                     }
 
-                    console.log(fields);
-                    console.log(files);
+                    const folder = `folder${generateId(100000)}`;
+
+                    fs.mkdir(path.join(rootPath, "public", "files", folder), (err)=>{
+
+                        if(err){
+                            console.log(err);
+                        }
+                    });
+
+                    for(let i=0; i<files.documents.length; i++){
+
+                        const file=files.documents[i];
+
+                        const oldpath=file.filepath;
+
+                        const newPath=`${path.join(rootPath, "public", "files", folder)}/${file.originalFilename}`;
+                                                
+                        fs.readFile(oldpath, (err, data)=>{
+
+                            if(err){
+                                console.log(err)
+                            }
+
+                            fs.writeFile(newPath, data, (err)=>{
+
+                                if(err){
+                                    console.log(err);
+                                }
+                            })
+                        });
+                    }
+
+                    const { email, id, topic, additionalInfo, fileNames } = fields;
+
+                    const attachments = [];
+
+                    for (let i = 0; i < fileNames.length; i++){
+
+                        attachments.push({
+                            filename: fileNames[i],
+                            path:`${path.join(rootPath, "public", "files", folder)}/${fileNames[i]}`
+                        });
+                    }
+
+                    const mailOptions = {
+                        from: senderEmail,
+                        to: email[0],
+                        subject: `Order${id[0]} - ${topic[0]}`,
+                        text: additionalInfo[0],
+                        attachments:attachments
+                    }
+
+                    transporter.sendMail(mailOptions, (err, info) => {
+                        
+                        if (err) {
+                            console.log(err);
+                        } else {
+                            
+                            const insert = `INSERT INTO sentOrders (transaction_id, order_id, files, additionalMessage, timestamp) VALUES (?)`;
+
+                            const transactionId = generateId(100000);
+
+                            const sentOrderDetails = [
+                                transactionId,
+                                id[0],
+                                folder,
+                                additionalInfo[0],
+                                new Date()
+                            ]
+
+                            dbConnection.query(insert, [sentOrderDetails], (err, result) => {
+                                
+                                if (err) {
+                                    console.log(err);
+                                }
+
+                                res.sendStatus(200)
+                            })
+                        }
+                    })
                 })
-                
             } else {
                 res.sendStatus(401);
             }
@@ -412,7 +493,7 @@ router.post("/order/send/:id/", verifyToken, (req, res) => {
             break;
 
         case 401:
-            res.sendStatus(401);;;
+            res.sendStatus(401);
 
             break;
         
