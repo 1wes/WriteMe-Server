@@ -239,6 +239,8 @@ router.post("/new", verifyToken, (req, res)=>{
 
     switch(statusCode){
         case 200:
+
+            res.sendStatus(200);
             
             const form=new formidable.IncomingForm();
 
@@ -331,10 +333,9 @@ router.post("/new", verifyToken, (req, res)=>{
             break;
 
         case 403:
-            res.sendStatus(403); 
+            res.sendStatus(403);
 
             break;
-        
     }
 
 } );
