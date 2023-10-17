@@ -454,7 +454,10 @@ router.post("/order/send/:id/", verifyToken, (req, res) => {
                         from: senderEmail,
                         to: email[0],
                         subject: `Order${id[0]} - ${topic[0]}`,
-                        text: additionalInfo[0],
+                        text: `Dear customer, the above referenced order has been completed and is attached in this mail. Kindly go through it to 
+                        confirm that it meets your requirements and standards. Incase of any changes, you have up to 7 days to request a revision, for free.
+                        Please note that at the elapse of this period (7 days), you will no longer be able to request a revision for this work
+                        ${additionalInfo[0]===""?"":additionalInfo[0]}` ,
                         attachments:attachments
                     }
 
