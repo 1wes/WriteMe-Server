@@ -387,8 +387,14 @@ router.post("/revision", verifyToken, (req, res)=>{
   
 });
 
-
 router.post("/order/send/:id/", verifyToken, (req, res) => {
+
+    const revisionGracePeriod = (dispatchTime) => {
+        
+        const gracePeriod = dispatchTime.getTime() + (1000 * 3600 * 24 * 7);
+
+        return gracePeriod
+    }
     
     switch (statusCode){
 
@@ -450,14 +456,17 @@ router.post("/order/send/:id/", verifyToken, (req, res) => {
                         });
                     }
 
+                    const dispatchTime = new Date(Date.now());
+
+                    const gracePeriod = revisionGracePeriod(dispatchTime);
+
                     const mailOptions = {
                         from: senderEmail,
                         to: email[0],
                         subject: `Order${id[0]} - ${topic[0]}`,
                         text: `Dear customer, the above referenced order has been completed and is attached in this mail. Kindly go through it to 
-                        confirm that it meets your requirements and standards. Incase of any changes, you have up to 7 days to request a revision, for free.
-                        Please note that at the elapse of this period (7 days), you will no longer be able to request a revision for this work
-                        ${additionalInfo[0]===""?"":additionalInfo[0]}` ,
+                        confirm that it meets your requirements and standards. Incase of any changes, you have up to 7 days (${new Date(gracePeriod).toUTCString()}) 
+                        to request a revision, for free. Please note that at the elapse of this period (7 days), you will no longer be able to request a revision for this work. ${additionalInfo[0]===""?"":additionalInfo[0]}` ,
                         attachments:attachments
                     }
 
@@ -476,7 +485,7 @@ router.post("/order/send/:id/", verifyToken, (req, res) => {
                                 id[0],
                                 folder,
                                 additionalInfo[0],
-                                new Date()
+                                dispatchTime
                             ]
 
                             dbConnection.query(insert, [sentOrderDetails], (err, result) => {
