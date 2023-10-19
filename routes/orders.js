@@ -506,6 +506,48 @@ router.post("/order/send/:id/", verifyToken, (req, res) => {
 
             break;
     }
+});
+
+router.get("/order/dispatchTime/:id", verifyToken, (req, res)=>{
+
+    switch (statusCode) {
+        
+        case 200:
+
+            let getTime = `SELECT timestamp FROM sentOrders where order_id=?`;
+
+            dbConnection.query(getTime, req.params.id, (err, result)=>{
+
+                if(err){
+                    res.sendStatus(401);
+                }
+
+                if (result.length) { 
+                    res.json({
+                        code:200,
+                        message:result[0].timestamp
+                    })
+                } else {
+                    res.json({
+                        code:404,
+                        message:"This order has not yet been sent to you. Kindly wait until it is sent before you request a revision"
+                    })
+                }
+
+            })
+
+            break;
+
+        case 401:
+            res.sendStatus(401);
+
+            break;
+        
+        case 403:
+            res.sendStatus(403);
+
+            break;
+    }
 })
 
 router.post("/cancel-order", verifyToken, (req, res)=>{
