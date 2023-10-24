@@ -239,13 +239,11 @@ router.post("/new", verifyToken, (req, res)=>{
 
     switch(statusCode){
         case 200:
-
-            res.sendStatus(200);
             
-            const form=new formidable.IncomingForm();
+            const form = new formidable.IncomingForm();
 
-            const rootPath=(path.dirname(__dirname));
-
+            const rootPath = (path.dirname(__dirname));
+            
             form.parse(req, (err, fields, files)=>{
 
                 if(err){
@@ -287,7 +285,7 @@ router.post("/new", verifyToken, (req, res)=>{
                     }
                 }
 
-                const {gradeLevel, subject, instructions, pagesOrwords, amount, deadline, time, sources, style, topic}=fields;
+                const {gradeLevel, subject, instructions, pagesOrwords, amount, deadline, time, sources, style, topic, language}=fields;
 
                 let orderId=generateId(100000000);
 
@@ -303,6 +301,7 @@ router.post("/new", verifyToken, (req, res)=>{
                     subject[0],
                     gradeLevel[0],
                     style[0],
+                    language[0],
                     sources[0],
                     files,
                     instructions[0],
@@ -314,7 +313,7 @@ router.post("/new", verifyToken, (req, res)=>{
                     status
                 ];
 
-                const createOrder="INSERT INTO orders (order_id, created_by, subject, level, ref_style, sources, files, instructions, topic, words_or_pages, amount, date_deadline, time_deadline, status) VALUES (?)";
+                const createOrder="INSERT INTO orders (order_id, created_by, subject, level, ref_style, language, sources, files, instructions, topic, words_or_pages, amount, date_deadline, time_deadline, status) VALUES (?)";
 
                 dbConnection.query(createOrder, [orderDetails], (err)=>{
 
