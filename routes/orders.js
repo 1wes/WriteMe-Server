@@ -250,7 +250,7 @@ router.post("/new", verifyToken, (req, res)=>{
                     console.log(err);
                 }
 
-                const folder=`folder${generateId(100000)}`
+                const folder = `folder${generateId(100000)}`;
 
                 if(files.attachedFiles){
 
@@ -265,7 +265,7 @@ router.post("/new", verifyToken, (req, res)=>{
 
                         const file=files.attachedFiles[i];
 
-                        const oldpath=file.filepath;
+                        const oldpath = file.filepath;
 
                         const newPath=`${path.join(rootPath, "public", "files", folder)}/${file.originalFilename}`;
                                                 
