@@ -321,7 +321,7 @@ router.post("/new", verifyToken, (req, res)=>{
                         console.log(err);
                     }
 
-                    res.sendStatus(200);
+                    res.sendStatus(200); 
                 });
             })
             break;
