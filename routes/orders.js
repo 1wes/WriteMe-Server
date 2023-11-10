@@ -516,6 +516,81 @@ router.post("/order/send/:id/", verifyToken, (req, res) => {
     }
 });
 
+router.put("/order/update/files/:id", verifyToken, (req, res)=>{
+
+    switch(statusCode){
+
+        case 200:
+
+            const form = new formidable.IncomingForm();
+
+            form.parse(req, (err, fields, files) => {
+                
+                if (err) {
+                    console.log(err);
+                }
+
+                const checkFileFolder = `SELECT (files) FROM orders WHERE order_id=?`;
+
+                dbConnection.query(checkFileFolder, req.params.id, (err, result) => {
+                    
+                    if (err) {
+                        console.log(err);
+                    }
+
+                    if (result[0].files==='') {
+                        console.log("No files")
+                    } else {
+                        
+                        const rootPath = (path.dirname(__dirname));
+
+                        const filesFolder = result[0].files;
+                                                
+                        for(let i=0; i<files.additionalFiles.length; i++){
+
+                            const currentFile = files.additionalFiles[i];
+
+                            const oldPath = currentFile.filepath;
+
+                            const newPath = `${path.join(rootPath, "public", "files", filesFolder)}/${currentFile.originalFilename}`;
+
+                            fs.readFile(oldPath, (err, data) => {
+
+                                if (err) {
+                                    console.log(err);
+                                }
+
+                                fs.writeFile(newPath, data, (err)=> {
+                                    
+                                    if (err) {
+                                        console.log(err);
+                                    }
+                                })
+                                
+                            } )
+                        }
+
+                        res.sendStatus(200); 
+                    }
+
+                })
+
+            })
+
+            break;
+        
+        case 401:
+            res.sendStatus(401);
+
+            break;
+        
+        case 403:
+            res.sendStatus(403);
+
+            break;
+    }
+})
+
 router.get("/order/dispatchTime/:id", verifyToken, (req, res)=>{
 
     switch (statusCode) {
