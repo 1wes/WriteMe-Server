@@ -539,7 +539,52 @@ router.put("/order/update/files/:id", verifyToken, (req, res)=>{
                     }
 
                     if (result[0].files==='') {
-                        console.log("No files")
+                        
+                        const rootPath = (path.dirname(__dirname));
+
+                        const folder = `folder${generateId(100000)}`;
+
+                        fs.mkdir(path.join(rootPath, "public", "files", folder), (err) => {
+                            
+                            if (err) {
+                                console.log(err);
+                            }
+                        });
+
+                        for (let i = 0; i < files.additionalFiles.length; i++){
+
+                            const currentFile = files.additionalFiles[i];
+
+                            const oldPath = currentFile.filepath;
+
+                            const newPath = `${path.join(rootPath, "public", "files", folder)}/${currentFile.originalFilename}`;
+
+                            fs.readFile(oldPath, (err, data) => {
+                                
+                                if (err) {
+                                    console.log(err);
+                                }
+
+                                fs.writeFile(newPath, data, (err) => {
+                                    
+                                    if (err) {
+                                        console.log(err);
+                                    }
+                                });
+                            })
+                        }
+
+                        const updateFiles = `UPDATE orders SET files=? WHERE order_id=${req.params.id}`;
+
+                        dbConnection.query(updateFiles, folder, (err) => {
+                            
+                            if (err) {
+                                console.log(err)
+                            } else {
+                                res.sendStatus(200);
+                            }
+                        })
+
                     } else {
                         
                         const rootPath = (path.dirname(__dirname));
