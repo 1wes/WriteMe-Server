@@ -140,7 +140,10 @@ router.get("/check-token", verifyToken, (req, res)=>{
     switch(statusCode){
 
         case 200:
-            res.sendStatus(200);
+            res.json({
+                code: 200,
+                role:tokenInfo.role
+            });
 
             break;
 
