@@ -142,7 +142,9 @@ router.get("/check-token", verifyToken, (req, res)=>{
         case 200:
             res.json({
                 code: 200,
-                role:tokenInfo.role
+                role: tokenInfo.role,
+                firstName: tokenInfo.firstName,
+                lastName:tokenInfo.lastName
             });
 
             break;
