@@ -83,7 +83,9 @@ router.post("/login", (req, res)=>{
 
             res.json({
                 code:200, 
-                role:result[0].role
+                role: result[0].role,
+                firstName: result[0].first_name,
+                lastName:result[0].last_name
             })
 
         }else{
