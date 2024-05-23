@@ -285,7 +285,7 @@ router.post("/new", verifyToken, (req, res)=>{
                     }
                 }
 
-                const {gradeLevel, subject, instructions, pagesOrwords, amount, deadline, time, sources, style, topic, language}=fields;
+                const { service, gradeLevel, subject, instructions, pagesOrwords, amount, deadline, time, sources, style, topic, language } = fields;                
 
                 let orderId=generateId(100000000);
 
@@ -298,6 +298,7 @@ router.post("/new", verifyToken, (req, res)=>{
                 const orderDetails=[
                     orderId,
                     createdBy,
+                    service[0],
                     subject[0],
                     gradeLevel[0],
                     style[0],
@@ -313,7 +314,7 @@ router.post("/new", verifyToken, (req, res)=>{
                     status
                 ];
 
-                const createOrder="INSERT INTO orders (order_id, created_by, subject, level, ref_style, language, sources, files, instructions, topic, words_or_pages, amount, date_deadline, time_deadline, status) VALUES (?)";
+                const createOrder="INSERT INTO orders (order_id, created_by, service, subject, level, ref_style, language, sources, files, instructions, topic, words_or_pages, amount, date_deadline, time_deadline, status) VALUES (?)";
 
                 dbConnection.query(createOrder, [orderDetails], (err)=>{
 
