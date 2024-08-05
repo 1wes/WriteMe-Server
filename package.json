@@ -5,6 +5,9 @@
   "main": "server.js",
   "scripts": {
     "start": "nodemon server.js",
+    "start:ts":"nodemon --exec 'ts-node' src/prisma.ts",
+    "build": "tsc",
+    "start:build":"npm run build && node dist/server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -28,7 +31,8 @@
     "formidable": "^3.5.1",
     "jsonwebtoken": "^9.0.1",
     "mysql": "^2.18.1",
-    "nodemailer": "^6.9.6"
+    "nodemailer": "^6.9.6",
+    "nodemon": "^3.1.4"
   },
   "devDependencies": {
     "@types/node": "^22.1.0",
