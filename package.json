@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/1wes/WriteMe-order-management-backend#readme",
   "dependencies": {
+    "@prisma/client": "^5.17.0",
     "bcrypt": "^5.1.1",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
