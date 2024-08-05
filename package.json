@@ -31,6 +31,9 @@
     "nodemailer": "^6.9.6"
   },
   "devDependencies": {
-    "prisma": "^5.17.0"
+    "@types/node": "^22.1.0",
+    "prisma": "^5.17.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.4"
   }
 }
