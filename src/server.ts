@@ -1,10 +1,14 @@
-const express=require('express');
-const app=express();
-const {port, client_origin}=require('./env-config');
-const cors=require('cors');
-const ordersAPI=require('./routes/orders');
-const clients=require("./routes/users");
-const cookieParser=require('cookie-parser');
+import express from 'express';
+
+import config from './env-config';
+import cors from 'cors';
+import ordersAPI from './routes/orders';
+import clients from "./routes/users";
+import cookieParser from 'cookie-parser';
+
+const app = express();
+
+const { port, client_origin } = config;
 
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
