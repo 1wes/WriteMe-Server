@@ -1,8 +1,17 @@
-require('dotenv').config();
+import dotenv from 'dotenv';
+import EnvConfig from './types/interface';
 
-const {PORT, DB_USERNAME, DB_PASSWORD, DB_HOST, DB_NAME, TOKEN_SECRET_KEY, CLIENT_ORIGIN_URL, EMAIL, PASSWORD}=process.env;
+dotenv.config();
 
-module.exports={
+const { PORT, DB_USERNAME, DB_PASSWORD, DB_HOST, DB_NAME, TOKEN_SECRET_KEY, CLIENT_ORIGIN_URL, EMAIL, PASSWORD } = process.env;
+
+// check whether all env variables are loaded
+if (!PORT || !DB_USERNAME || !DB_PASSWORD || !DB_HOST || !DB_NAME || !TOKEN_SECRET_KEY || !CLIENT_ORIGIN_URL || !EMAIL || !PASSWORD) {
+    
+    throw new Error(`Some evironment variables are missing`);
+}
+
+const config:EnvConfig={
     port:PORT,
     db_user:DB_USERNAME,
     db_password:DB_PASSWORD,
@@ -13,3 +22,5 @@ module.exports={
     senderEmail: EMAIL,
     password:PASSWORD
 }
+
+export default config;
