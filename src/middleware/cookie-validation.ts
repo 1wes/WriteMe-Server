@@ -1,51 +1,56 @@
-const jwt=require('jsonwebtoken');
-const {secret_key}=require('../env-config');
+import { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
+import envConfig from '../env-config';
 
-let verifyToken=(req, res, next)=>{
 
-    let authCookie=req.cookies.authorizationToken;
+const { secret_key } = envConfig;
+
+let verifyToken=(req:Request, res:Response, next:NextFunction):any=>{
+
+    let authCookie: string | undefined = req.cookies.authorizationToken;
 
     if(authCookie){
 
         const isTokenValid=()=>{
 
-            return tokens=jwt.verify(authCookie, secret_key, (err, decoded)=>{
+            return jwt.verify(authCookie as string, secret_key as string | Buffer, (err, decoded)=>{
 
                 if(err){
 
-                    return response={
+                    return {
                         code:401,
                         message:err.message
                     }
 
                 }else{
-                    return response={
+                    return {
                         code:200,
                         message:decoded
                     }
                 }
             })
         }
-        const tokenStatus=isTokenValid();
+
+        const tokenStatus: any = isTokenValid();
 
         if(tokenStatus.code==200){
 
-            statusCode=tokenStatus.code;
+            req.statusCode=tokenStatus.code;
 
-            tokenInfo=tokenStatus.message
+            req.tokenInfo=tokenStatus.message
                             
             next();
         }else{
 
-            statusCode=tokenStatus.code;
+            req.statusCode=tokenStatus.code;
 
             next();
         }
     }else{
 
-        statusCode=403;
+        req.statusCode=403;
 
         next();
     }
 }
-module.exports=verifyToken;
+export default verifyToken;
