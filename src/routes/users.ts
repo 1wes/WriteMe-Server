@@ -1,22 +1,25 @@
-const express=require('express');
+import express, {Request, Response} from 'express';
+import dbConnection from'../db';
+import { hashPasssword, comparePassword } from '../utils/password';
+import generateId from '../utils/generateId';
+import generateToken from '../utils/token';
+import verifyToken from '../middleware/cookie-validation';
+
+
 const router=express.Router();
-const dbConnection=require('../db');
-const {hashPasssword, comparePassword}=require('../utils/password');
-const generateId=require('../utils/generateId');
-const generateToken=require('../utils/token');
-const verifyToken=require('../middleware/cookie-validation.js');
 
 router.use((req, res, next)=>{
     next();
 });
 
-router.post("/register", async(req, res)=>{
+
+router.post("/register", async(req:Request, res:Response)=>{
     
     const {firstName, lastName, email, dialCode, phoneNumber, confirmPassword}=req.body;
 
-    const checkEmailStatement=`SELECT COUNT(email) AS count FROM users WHERE email=?`;
+    const checkEmailStatement:string=`SELECT COUNT(email) AS count FROM users WHERE email=?`;
 
-    dbConnection.query(checkEmailStatement, email, async (err, result)=>{
+    dbConnection.query(checkEmailStatement, email, async (err, result:any)=>{
 
         if(err){
             console.log(err);
@@ -40,7 +43,7 @@ router.post("/register", async(req, res)=>{
         
             let sqlStatement=`INSERT INTO users (uuid, first_name, last_name, email, phone_no, password, role) VALUES (?)`;
         
-            dbConnection.query(sqlStatement, [userInfo], (err, result)=>{
+            dbConnection.query(sqlStatement, [userInfo], (err, result:any)=>{
         
                 if(err){
                     console.log(err)
@@ -52,13 +55,13 @@ router.post("/register", async(req, res)=>{
     })
 });
 
-router.post("/login", (req, res)=>{
+router.post("/login", (req:Request, res:Response)=>{
 
     const {email, password}=req.body;
 
     const selectStatement=`SELECT first_name, last_name, password, uuid, role FROM users WHERE email=?`;
 
-    dbConnection.query(selectStatement, email, async(err, result)=>{
+    dbConnection.query(selectStatement, email, async(err, result:any)=>{
 
         if(err){
             console.log(err);
@@ -95,14 +98,16 @@ router.post("/login", (req, res)=>{
     })
 });
 
-router.get("/user-details", verifyToken, (req, res)=>{
+router.get("/user-details", verifyToken, (req: Request, res: Response) => {
+    
+    const { statusCode, tokenInfo } = req;
 
     switch(statusCode){
 
         case 200:
             let getUserName=`SELECT first_name, last_name FROM  users WHERE email=?`;
 
-            dbConnection.query(getUserName, tokenInfo.email, (err, result)=>{
+            dbConnection.query(getUserName, tokenInfo.email, (err, result:any)=>{
 
                 if(err){
                     console.log(err);
@@ -127,17 +132,11 @@ router.get("/user-details", verifyToken, (req, res)=>{
     }
 });
 
-router.get("/logout", verifyToken, (req, res)=>{
 
-    if(statusCode){
 
-        res.clearCookie("authorizationToken", {domain:"localhost", path:"/"});
-
-        res.sendStatus(200);
-    }
-});
-
-router.get("/check-token", verifyToken, (req, res)=>{
+router.get("/check-token", verifyToken, (req: Request, res: Response) => {
+    
+    const { statusCode, tokenInfo } = req;
 
     switch(statusCode){
 
@@ -168,4 +167,4 @@ router.post("/forgot-password", (req, res)=>{
 
 })
 
-module.exports=router;
+export default router;
