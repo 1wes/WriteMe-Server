@@ -1,9 +1,11 @@
-const jwt=require('jsonwebtoken');
-const {secret_key}=require('../env-config');
+import jwt from 'jsonwebtoken';
+import envConfig from '../env-config';
 
-const generateToken=(email, uuid, role, firstName, lastName)=>{
+const { secret_key } = envConfig;
+
+const generateToken=(email:string, uuid:number, role:string, firstName:string, lastName:string):string=>{
 
     return jwt.sign({firstName:firstName, lastName:lastName,email:email, uuid:uuid, role:role}, secret_key, {expiresIn:"1h"})
 }
 
-module.exports=generateToken;
+export default generateToken;
