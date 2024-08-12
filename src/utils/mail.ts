@@ -1,5 +1,7 @@
-const nodemailer = require("nodemailer");
-const { senderEmail, password } = require('../env-config');
+import nodemailer from 'nodemailer';
+import envConfig from '../env-config';
+
+const { senderEmail, password } = envConfig;
 
 const transporter = nodemailer.createTransport({
     service: "gmail",
@@ -17,4 +19,5 @@ transporter.verify(err => {
         console.log("Ready to send email");
     }
 })
-module.exports = transporter;
+
+export default transporter;
