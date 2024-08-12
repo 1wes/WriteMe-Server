@@ -1,14 +1,17 @@
-const mysql = require('mysql');
-const { db_name, db_password, db_host, db_user } = require('./env-config');
+import mysql from 'mysql';
 
-const dbConnection = mysql.createConnection({ 
+import envConfig from './env-config'
+
+const { db_name, db_password, db_host, db_user } = envConfig;
+
+var dbConnection = mysql.createConnection({ 
     host: db_host,
     user: db_user,
     password: db_password,
     database: db_name
 });
 
-dbConnection.connect(err => {
+dbConnection.connect(err=> {
 
     if (err) {
         throw err
@@ -18,4 +21,4 @@ dbConnection.connect(err => {
 
 });
 
-module.exports = dbConnection;
+export default dbConnection;
