@@ -1,7 +1,7 @@
-const crypto=require('crypto');
+import crypto from 'crypto';
 
-let generateId=(maxNumber)=>{
-    return id=`${crypto.randomInt(1, maxNumber).toString()}`
+let generateId=(maxNumber:number):string=>{
+    return crypto.randomInt(1, maxNumber).toString();
 }
 
-module.exports=generateId;
+export default generateId;
