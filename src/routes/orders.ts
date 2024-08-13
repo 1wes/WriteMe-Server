@@ -12,7 +12,7 @@ import { OrderDetails } from "../types/interface";
 const router = express.Router();
 const { senderEmail } = envConfig;
 
-router.use((next: NextFunction) => {
+router.use((req:Request, res:Response, next: NextFunction) => {
   next();
 });
 
