@@ -16,7 +16,7 @@ transporter.verify(err => {
     if (err) {
         console.log(err);
     } else {
-        console.log("Ready to send email");
+        console.log("[✅]:Ready to send email");
     }
 })
 

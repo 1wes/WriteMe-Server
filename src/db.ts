@@ -17,7 +17,7 @@ dbConnection.connect(err=> {
         throw err
     }
 
-    console.log("successful database connection");
+    console.log("[✅]:Successful database connection");
 
 });
 
