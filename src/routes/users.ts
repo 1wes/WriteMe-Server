@@ -4,6 +4,7 @@ import { hashPasssword, comparePassword } from '../utils/password';
 import generateId from '../utils/generateId';
 import generateToken from '../utils/token';
 import verifyToken from '../middleware/cookie-validation';
+import bcrypt from 'bcrypt';
 
 
 const router=express.Router();
@@ -32,13 +33,15 @@ router.post("/register", async(req:Request, res:Response)=>{
             let userId=generateId(100000);
 
             const phone=dialCode+phoneNumber;
+
+            const salt = await bcrypt.genSalt(10 as number);
         
-            const hashedPassword=await hashPasssword(confirmPassword);
+            const hashedPassword=await hashPasssword(confirmPassword, salt);
 
             const role='user';
         
             let userInfo=[
-                userId, firstName, lastName, email, phone, hashedPassword, role
+                userId, firstName, lastName, email, phone, hashedPassword, salt, role
             ]
         
             let sqlStatement=`INSERT INTO users (uuid, first_name, last_name, email, phone_no, password, role) VALUES (?)`;
@@ -67,7 +70,7 @@ router.post("/login", (req:Request, res:Response)=>{
             console.log(err);
         }
 
-        if(result.length==0){
+        if(result.length===0){
 
             return res.sendStatus(404)
         }
