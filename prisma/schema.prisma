@@ -8,34 +8,34 @@ datasource db {
 }
 
 model OrderModification {
-  id                Int    @default(autoincrement())
-  modificationId   String @db.VarChar(45) @map("modification_id")
-  orderId          String @db.VarChar(45) @map("order_id")
-  modificationType String @db.VarChar(45) @map("modification_type")
-  reason            String @db.VarChar(6000)
+  id               Int    @default(autoincrement())
+  modificationId   String @map("modification_id") @db.VarChar(45)
+  orderId          String @map("order_id") @db.VarChar(45)
+  modificationType String @map("modification_type") @db.VarChar(45)
+  reason           String @db.VarChar(6000)
 
   @@id([id, modificationId])
   @@map("orderModification")
 }
 
 model Order {
-  id             Int      @default(autoincrement())
-  orderId       String   @db.VarChar(45) @map("order_id")
-  createdBy     String   @db.VarChar(45) @map("created_by")
-  service        String   @db.VarChar(45)
-  subject        String   @db.VarChar(45)
-  level          String   @db.VarChar(45)
-  refStyle      String   @db.VarChar(45) @map("ref_style")
-  language       String   @db.VarChar(45)
-  sources        String   @db.VarChar(45)
-  files          String?  @db.VarChar(45)
-  instructions   String   @db.VarChar(6000)
-  topic          String   @db.VarChar(6000)
-  wordsOrPages String   @db.VarChar(45) @map("words_or_pages")
-  amount         String   @db.VarChar(45)
-  dateDeadline  DateTime @db.Date @map("date_deadline")
-  timeDeadline  DateTime @db.Time(0) @map("time_deadline")
-  status         String   @db.VarChar(45)
+  id           Int      @default(autoincrement())
+  orderId      String   @map("order_id") @db.VarChar(45)
+  createdBy    String   @map("created_by") @db.VarChar(45)
+  service      String   @db.VarChar(45)
+  subject      String   @db.VarChar(45)
+  level        String   @db.VarChar(45)
+  refStyle     String   @map("ref_style") @db.VarChar(45)
+  language     String   @db.VarChar(45)
+  sources      String   @db.VarChar(45)
+  files        String?  @db.VarChar(45)
+  instructions String   @db.VarChar(6000)
+  topic        String   @db.VarChar(6000)
+  wordsOrPages String   @map("words_or_pages") @db.VarChar(45)
+  amount       String   @db.VarChar(45)
+  dateDeadline DateTime @map("date_deadline") @db.Date
+  timeDeadline DateTime @map("time_deadline") @db.Time(0)
+  status       String   @db.VarChar(45)
 
   @@id([id, orderId])
   @@map("orders")
@@ -43,8 +43,8 @@ model Order {
 
 model SentOrder {
   id                Int      @default(autoincrement())
-  transactionId    String   @db.VarChar(45) @map("transaction_id")
-  orderId          String   @db.VarChar(45) @map("order_id")
+  transactionId     String   @map("transaction_id") @db.VarChar(45)
+  orderId           String   @map("order_id") @db.VarChar(45)
   files             String   @db.VarChar(45)
   additionalMessage String?  @db.VarChar(5000)
   timestamp         DateTime @db.DateTime(0)
@@ -54,14 +54,15 @@ model SentOrder {
 }
 
 model User {
-  id         Int     @default(autoincrement())
-  uuid       String  @db.VarChar(45)
-  firstName String  @db.VarChar(45) @map("first_name")
-  lastName  String  @db.VarChar(45) @map("last_name")
-  email      String  @unique @db.VarChar(45)
-  phoneNumber   String? @db.VarChar(45) @map("phone_no")
-  password   String  @db.VarChar(6000)
-  role       String  @db.VarChar(45)
+  id          Int     @default(autoincrement())
+  uuid        String  @db.VarChar(45)
+  firstName   String  @map("first_name") @db.VarChar(45)
+  lastName    String  @map("last_name") @db.VarChar(45)
+  email       String  @unique @db.VarChar(45)
+  phoneNumber String? @map("phone_no") @db.VarChar(45)
+  salt        String  @db.VarChar(45)
+  password    String  @db.VarChar(6000)
+  role        String  @db.VarChar(45)
 
   @@id([id, uuid])
   @@map("users")
