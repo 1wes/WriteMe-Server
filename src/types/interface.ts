@@ -1,9 +1,5 @@
 export default interface EnvConfig{
     port:string,
-    db_user:string,
-    db_password:string,
-    db_host:string,
-    db_name:string,
     secret_key:string,
     client_origin: string,
     senderEmail: string,
