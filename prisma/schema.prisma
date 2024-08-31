@@ -63,8 +63,14 @@ model User {
   phoneNumber String? @map("phone_no") @db.VarChar(45)
   salt        String  @db.VarChar(45)
   password    String  @db.VarChar(6000)
-  role        String  @db.VarChar(45)
+  role        Role    @default(User)
 
   @@id([id, uuid])
   @@map("users")
+}
+
+enum Role{
+  Admin
+  Writer
+  User
 }
