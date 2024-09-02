@@ -7,7 +7,8 @@
     "start": "nodemon src/server.ts",
     "build": "tsc",
     "start:build": "npm run build && node dist/server.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prisma:migrate":"prisma migrate dev --preview-feature && ts-node prisma/seed.ts"
   },
   "repository": {
     "type": "git",
@@ -42,7 +43,7 @@
     "@types/jsonwebtoken": "^9.0.6",
     "@types/node": "^22.1.0",
     "@types/nodemailer": "^6.4.15",
-    "prisma": "^5.17.0",
+    "prisma": "^5.19.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.4"
   }
