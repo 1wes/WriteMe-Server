@@ -59,55 +59,58 @@ router.post("/register", async(req:Request, res:Response)=>{
     }
 });
 
-// router.post("/login", (req:Request, res:Response)=>{
+router.post("/login", async(req:Request, res:Response)=>{
 
-//     const { email, password } = req.body;
+    const { email, password } = req.body;
     
-//     try {
+    try {
+
+        let user = await db.user.findUnique({
+            where: { email: email },
+            select: {
+                firstName: true,
+                lastName: true,
+                password: true,
+                uuid: true,
+                role:true,
+            }
+        })
+
+        // if user does not exist
+        if (!user) {
+            res.sendStatus(404);
+            return;
+        } 
+
+        const { firstName, lastName, uuid, role } = user;
+
+        let passwordMatch = await comparePassword(password, user.password);
+
+        if (passwordMatch) {
+            let token = generateToken(email, uuid, role, firstName, lastName);
+
+            res.cookie("AuthorizationToken", token, {
+                httpOnly: true,
+                secure: true,
+                sameSite:"lax"
+            });
+
+            res.json({
+                code: 200,
+                role: role,
+                firstName: firstName,
+                lastName: lastName,
+            });
+
+        } else {
+            return res.sendStatus(403);
+        }
         
-//     } catch (err) {
-//         console.log(err);
-//         res.sendStatus(500);
-//     }
-
-//     // const selectStatement=`SELECT first_name, last_name, password, uuid, role FROM users WHERE email=?`;
-
-//     // dbConnection.query(selectStatement, email, async(err, result:any)=>{
-
-//         if(err){
-//             console.log(err);
-//         }
-
-//         if(result.length===0){
-
-//             return res.sendStatus(404)
-//         }
-
-//         let passwordMatch=await comparePassword(password, result[0].password)
-
-//         if(passwordMatch){
-
-//             let token=generateToken(email, result[0].uuid, result[0].role, result[0].first_name, result[0].last_name);
-
-//             res.cookie("authorizationToken", token, {
-//                 httpOnly:true,
-//                 secure:true,
-//                 sameSite:'lax'
-//             });
-
-//             res.json({
-//                 code:200, 
-//                 role: result[0].role,
-//                 firstName: result[0].first_name,
-//                 lastName:result[0].last_name
-//             })
-
-//         }else{
-
-//             return res.sendStatus(403);
-//         }
-//     })
-// });
+    } catch (err) {
+        console.log(err);
+        res.sendStatus(500);
+    }
+});
 
 // router.get("/user-details", verifyToken, (req: Request, res: Response) => {
     
