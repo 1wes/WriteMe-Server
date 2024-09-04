@@ -112,73 +112,85 @@ router.post("/login", async(req:Request, res:Response)=>{
     }
 });
 
-// router.get("/user-details", verifyToken, (req: Request, res: Response) => {
+router.get("/user-details", verifyToken, async(req: Request, res: Response) => {
     
-//     const { statusCode, tokenInfo } = req;
+    const { statusCode, tokenInfo } = req;
 
-//     switch(statusCode){
+    const { email } = tokenInfo;
 
-//         case 200:
-//             let getUserName=`SELECT first_name, last_name FROM  users WHERE email=?`;
+    switch(statusCode){
 
-//             dbConnection.query(getUserName, tokenInfo.email, (err, result:any)=>{
+        case 200:
 
-//                 if(err){
-//                     console.log(err);
-//                 }
+            try {
+                
+                const user = await db.user.findUnique({
+                    where: { email },
+                    select: {
+                        firstName: true,
+                        lastName:true,
+                    }
+                })
 
-//                 const userName=`${result[0].first_name} ${result[0].last_name}`;
+                const userName = `${user?.firstName} ${user?.lastName}`;
 
-//                 res.send(userName);            
-//             });
+                res.send(userName);
+                
+            } catch(err) {
+                console.log(err);
+                res.sendStatus(500);
+            }
 
-//             break;
+            break;
 
-//         case 401:
-//             res.sendStatus(401);
+        case 401:
+            res.sendStatus(401);
 
-//             break;
+            break;
 
-//         case 403:
-//             res.sendStatus(403);
+        case 403:
+            res.sendStatus(403);
 
-//             break;
-//     }
-// });
+            break;
+    }
+});
 
-
-
-// router.get("/check-token", verifyToken, (req: Request, res: Response) => {
+router.get("/check-token", verifyToken, (req: Request, res: Response) => {
     
-//     const { statusCode, tokenInfo } = req;
+    const { statusCode, tokenInfo } = req;
 
-//     switch(statusCode){
+    switch(statusCode){
 
-//         case 200:
-//             res.json({
-//                 code: 200,
-//                 role: tokenInfo.role,
-//                 firstName: tokenInfo.firstName,
-//                 lastName:tokenInfo.lastName
-//             });
+        case 200:
+            res.json({
+                code: 200,
+                role: tokenInfo.role,
+                firstName: tokenInfo.firstName,
+                lastName:tokenInfo.lastName
+            });
 
-//             break;
+            break;
 
-//         case 401:
-//             res.sendStatus(401);
+        case 401:
+            res.sendStatus(401);
 
-//             break;
+            break;
         
-//         case 403:
-//             res.sendStatus(403);
+        case 403:
+            res.sendStatus(403);
 
-//             break;
-//     }
-// })
+            break;
+    }
+})
 
-// router.post("/forgot-password", (req, res)=>{
+router.post("/forgot-password", (req:Request, res:Response)=>{
 
 
-// })
+})
 
-export default router;
+router.post("/forgot-password", (req: Request, res: Response) => {
+
+
+});
+
+export default router
