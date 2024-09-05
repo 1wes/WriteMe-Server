@@ -38,6 +38,8 @@ model Order {
   timeDeadline DateTime @map("time_deadline") @db.Time(0)
   status       String   @db.VarChar(45)
 
+  user         User     @relation(fields: [createdBy], references: [uuid])
+
   @@id([id, orderId])
   @@map("orders")
 }
@@ -56,7 +58,7 @@ model SentOrder {
 
 model User {
   id          Int     @default(autoincrement())
-  uuid        String  @db.VarChar(45)
+  uuid        String  @db.VarChar(45) @unique
   firstName   String  @map("first_name") @db.VarChar(45)
   lastName    String  @map("last_name") @db.VarChar(45)
   email       String  @unique @db.VarChar(45)
@@ -64,6 +66,8 @@ model User {
   salt        String  @db.VarChar(45)
   password    String  @db.VarChar(6000)
   role        Role    @default(User)
+
+  orders      Order[]  
 
   @@id([id, uuid])
   @@map("users")
