@@ -89,7 +89,7 @@ router.post("/login", async(req:Request, res:Response)=>{
         if (passwordMatch) {
             let token = generateToken(email, uuid, role, firstName, lastName);
 
-            res.cookie("AuthorizationToken", token, {
+            res.cookie("authorizationToken", token, {
                 httpOnly: true,
                 secure: true,
                 sameSite:"lax"
