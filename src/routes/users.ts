@@ -1,5 +1,5 @@
 import express, {Request, Response, NextFunction} from 'express';
-import { hashPasssword, comparePassword } from '../utils/password';
+import { hashPassword, comparePassword } from '../utils/password';
 import generateId from '../utils/generateId';
 import generateToken from '../utils/token';
 import verifyToken from '../middleware/cookie-validation';
@@ -33,7 +33,7 @@ router.post("/register", async(req:Request, res:Response)=>{
             let userId = generateId(100000);
             const phone=dialCode + phoneNumber;
             const salt = await bcrypt.genSalt(10 as number);
-            const hashedPassword = await hashPasssword(confirmPassword, salt);
+            const hashedPassword = await hashPassword(confirmPassword, salt);
             const role = 'User';
 
             await db.user.create({
