@@ -1,6 +1,7 @@
 import db from "../src/utils/prisma";
 import generateId from "../src/utils/generateId";
 import bcrypt from "bcrypt";
+import { hashPassword } from '../src/utils/password';
 
 const main = async () => {
   let uuid: string = generateId(100000);
@@ -9,7 +10,7 @@ const main = async () => {
   let firstName: string = "Super";
   let lastName: string = "User";
   let email: string = "okemwawes@gmail.com";
-  let password: string = "admin_123";
+  let password: string = await hashPassword('admin_123', salt);
 
   // create initial super user
   await db.user.create({
