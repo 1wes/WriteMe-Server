@@ -33,7 +33,7 @@ let verifyToken=(req:Request, res:Response, next:NextFunction):any=>{
 
         const tokenStatus: any = isTokenValid();
 
-        if(tokenStatus.code==200){
+        if(tokenStatus.code===200){
 
             req.statusCode=tokenStatus.code;
 
