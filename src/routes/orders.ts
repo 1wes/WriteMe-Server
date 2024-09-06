@@ -1,5 +1,4 @@
 import express, { Request, Response, NextFunction } from "express";
-import dbConnection from "../db";
 import path from "path";
 import verifyToken from "../middleware/cookie-validation";
 import formidable from "formidable";
@@ -8,8 +7,10 @@ import generateId from "../utils/generateId";
 import transporter from "../utils/mail";
 import envConfig from "../env-config";
 import { OrderDetails } from "../types/interface";
+import db from '../utils/prisma';
 
 const router = express.Router();
+
 const { senderEmail } = envConfig;
 
 router.use((req:Request, res:Response, next: NextFunction) => {
@@ -21,114 +22,61 @@ interface Order {
 }
 
 const getOrderStatus = (status: string, result: Order[]): Order[] => {
-  return result.filter((orders: Order) => orders.status == status);
+  return result.filter((orders: Order) => orders.status === status);
 };
 
 router.get("/admin", verifyToken, (req: Request, res: Response) => {
   const { statusCode, tokenInfo } = req;
-
   switch (statusCode) {
     case 200:
       if (tokenInfo.role === "Admin") {
+
         const username = `${tokenInfo.firstName} ${tokenInfo.lastName}`;
 
-        const allOrders = `SELECT orders.*, first_name, last_name FROM orders INNER JOIN users ON orders.created_by=uuid ORDER by id DESC`;
-
-        dbConnection.query(allOrders, (err, result) => {
-          if (err) {
-            console.log(err);
-          }
-
-          // orders interface
-          interface Orders {
-            username: string;
-            totalOrders: number;
-            allActiveOrders: number;
-            allCancelledOrders: number;
-            allCompletedOrders: number;
-            allOrders: [];
-          }
-
-          const orders: Orders = {
-            username: username,
-            totalOrders: result.length,
-            allActiveOrders: getOrderStatus("Active", result).length,
-            allCancelledOrders: getOrderStatus("Cancelled", result).length,
-            allCompletedOrders: getOrderStatus("Completed", result).length,
-            allOrders: result.length == 0 ? [] : result,
-          };
-
-          res.send(orders);
-        });
-      } else {
-        return res.sendStatus(401);
-      }
-
-      break;
-
-    case 401:
-      res.sendStatus(401);
-
-      break;
-
-    case 403:
-      res.sendStatus(403);
-
-      break;
-  }
-});
-
-router.get("/order/:id", verifyToken, (req: Request, res: Response) => {
-  const { statusCode, tokenInfo } = req;
-
-  switch (statusCode) {
-    case 200:
-      if (tokenInfo.role === "Admin") {
-        const id: string = req.params.id;
-
-        const username: string = `${tokenInfo.firstName} ${tokenInfo.lastName}`;
-
-        const row = `SELECT orders.*, first_name, last_name, email from orders RIGHT JOIN users on created_by=uuid where order_id=?`;
-
-        const attachments: any = [];
-
-        dbConnection.query(row, id, (err, result) => {
-          if (err) {
-            console.log(err);
-          }
-
-          let order: {};
-
-          if (result[0].files) {
-            attachments.push(result[0].files);
-
-            fs.readdir(
-              path.join(
-                path.dirname(__dirname),
-                "public",
-                "files",
-                result[0].files
-              ),
-              (err, data) => {
-                order = {
-                  ...result[0],
-                  username: username,
-                  attachedFiles: attachments,
-                  fileNames: data,
-                };
-
-                res.send(order);
+        let ordersWithUserDetails = db.order.findMany({
+          orderBy: {
+            id: 'desc'
+          },
+          include: {
+            user: {
+              select: {
+                firstName: true,
+                lastName: true,
               }
-            );
-          } else {
-            order = {
-              ...result[0],
-              username: username,
-              attachedFiles: attachments,
-            };
-            res.send(order);
+            }
           }
         });
+
+        // console.log(ordersWithUserDetails);
+
+        // const allOrders = `SELECT orders.*, first_name, last_name FROM orders INNER JOIN users ON orders.created_by=uuid ORDER by id DESC`;
+
+        // dbConnection.query(allOrders, (err, result) => {
+        //   if (err) {
+        //     console.log(err);
+        //   }
+
+        //   // orders interface
+        //   interface Orders {
+        //     username: string;
+        //     totalOrders: number;
+        //     allActiveOrders: number;
+        //     allCancelledOrders: number;
+        //     allCompletedOrders: number;
+        //     allOrders: [];
+        //   }
+
+        //   const orders: Orders = {
+        //     username: username,
+        //     totalOrders: result.length,
+        //     allActiveOrders: getOrderStatus("Active", result).length,
+        //     allCancelledOrders: getOrderStatus("Cancelled", result).length,
+        //     allCompletedOrders: getOrderStatus("Completed", result).length,
+        //     allOrders: result.length === 0 ? [] : result,
+        //   };
+
+        //   res.send(orders);
+        // });
       } else {
         return res.sendStatus(401);
       }
@@ -147,408 +95,199 @@ router.get("/order/:id", verifyToken, (req: Request, res: Response) => {
   }
 });
 
-router.get(
-  "/order/files/:folder/:fileName",
-  verifyToken,
-  (req: Request, res: Response) => {
-    const { statusCode, tokenInfo } = req;
+// router.get("/order/:id", verifyToken, (req: Request, res: Response) => {
+//   const { statusCode, tokenInfo } = req;
 
-    switch (statusCode) {
-      case 200:
-        if (tokenInfo.role === "Admin") {
-          const rootPath = path.dirname(__dirname);
+//   switch (statusCode) {
+//     case 200:
+//       if (tokenInfo.role === "Admin") {
+//         const id: string = req.params.id;
 
-          const filePath = path.join(
-            rootPath,
-            "public",
-            "files",
-            req.params.folder
-          );
+//         const username: string = `${tokenInfo.firstName} ${tokenInfo.lastName}`;
 
-          const file = path.join(filePath, req.params.fileName);
+//         const row = `SELECT orders.*, first_name, last_name, email from orders RIGHT JOIN users on created_by=uuid where order_id=?`;
 
-          res.sendFile(file);
-        } else {
-          res.sendStatus(401);
-        }
+//         const attachments: any = [];
 
-        break;
+//         dbConnection.query(row, id, (err, result) => {
+//           if (err) {
+//             console.log(err);
+//           }
 
-      case 401:
-        res.sendStatus(401);
+//           let order: {};
 
-        break;
+//           if (result[0].files) {
+//             attachments.push(result[0].files);
 
-      case 403:
-        res.sendStatus(403);
+//             fs.readdir(
+//               path.join(
+//                 path.dirname(__dirname),
+//                 "public",
+//                 "files",
+//                 result[0].files
+//               ),
+//               (err, data) => {
+//                 order = {
+//                   ...result[0],
+//                   username: username,
+//                   attachedFiles: attachments,
+//                   fileNames: data,
+//                 };
 
-        break;
-    }
-  }
-);
+//                 res.send(order);
+//               }
+//             );
+//           } else {
+//             order = {
+//               ...result[0],
+//               username: username,
+//               attachedFiles: attachments,
+//             };
+//             res.send(order);
+//           }
+//         });
+//       } else {
+//         return res.sendStatus(401);
+//       }
 
-router.put(
-  "/order/update/:orderId",
-  verifyToken,
-  (req: Request, res: Response) => {
-    const { statusCode, tokenInfo } = req;
+//       break;
 
-    switch (statusCode) {
-      case 200:
-        if (tokenInfo.role === "Admin") {
-          let { status } = req.body;
+//     case 401:
+//       res.sendStatus(401);
 
-          let { orderId } = req.params;
+//       break;
 
-          const updateStatement = `UPDATE orders SET status='${status}' WHERE order_id=?`;
+//     case 403:
+//       res.sendStatus(403);
 
-          dbConnection.query(updateStatement, orderId, (err) => {
-            if (err) {
-              console.log(err);
-            } else {
-              res.sendStatus(200);
-            }
-          });
-        } else {
-          res.sendStatus(401);
-        }
+//       break;
+//   }
+// });
 
-        break;
+// router.get(
+//   "/order/files/:folder/:fileName",
+//   verifyToken,
+//   (req: Request, res: Response) => {
+//     const { statusCode, tokenInfo } = req;
 
-      case 401:
-        res.sendStatus(401);
+//     switch (statusCode) {
+//       case 200:
+//         if (tokenInfo.role === "Admin") {
+//           const rootPath = path.dirname(__dirname);
 
-        break;
+//           const filePath = path.join(
+//             rootPath,
+//             "public",
+//             "files",
+//             req.params.folder
+//           );
 
-      case 403:
-        res.sendStatus(403);
+//           const file = path.join(filePath, req.params.fileName);
 
-        break;
-    }
-  }
-);
+//           res.sendFile(file);
+//         } else {
+//           res.sendStatus(401);
+//         }
 
-router.get("/all", verifyToken, (req: Request, res: Response) => {
+//         break;
+
+//       case 401:
+//         res.sendStatus(401);
+
+//         break;
+
+//       case 403:
+//         res.sendStatus(403);
+
+//         break;
+//     }
+//   }
+// );
+
+// router.put(
+//   "/order/update/:orderId",
+//   verifyToken,
+//   (req: Request, res: Response) => {
+//     const { statusCode, tokenInfo } = req;
+
+//     switch (statusCode) {
+//       case 200:
+//         if (tokenInfo.role === "Admin") {
+//           let { status } = req.body;
+
+//           let { orderId } = req.params;
+
+//           const updateStatement = `UPDATE orders SET status='${status}' WHERE order_id=?`;
+
+//           dbConnection.query(updateStatement, orderId, (err) => {
+//             if (err) {
+//               console.log(err);
+//             } else {
+//               res.sendStatus(200);
+//             }
+//           });
+//         } else {
+//           res.sendStatus(401);
+//         }
+
+//         break;
+
+//       case 401:
+//         res.sendStatus(401);
+
+//         break;
+
+//       case 403:
+//         res.sendStatus(403);
+
+//         break;
+//     }
+//   }
+// );
+
+router.get("/all", verifyToken, async(req: Request, res: Response) => {
+
   const { statusCode, tokenInfo } = req;
 
   switch (statusCode) {
     case 200:
-      const getAllOrder = `SELECT orders.id, order_id,topic, status, date_deadline, first_name,last_name FROM orders RIGHT JOIN users ON orders.created_by=uuid 
-            WHERE uuid=${tokenInfo.uuid}`;
 
-      dbConnection.query(getAllOrder, (err, result) => {
-        if (err) {
-          console.log(err);
-        }
+      try {
+  
+        let userWithOrders = await db.user.findUnique({
+          where: {
+            uuid: tokenInfo.uuid,
+          },
+          select: {
+            firstName: true,
+            lastName:true,
+            orders: {
+              select: {
+                id: true,
+                orderId: true,
+                topic: true,
+                status: true,
+                dateDeadline: true,
+              }
+            }
+          }
+        });
+
+        const orders = userWithOrders?.orders || [];
 
         let userInfo = {
-          name: `${result[0].first_name} ${result[0].last_name}`,
-          allOrders: result[0].id == null ? 0 : result.length,
-          activeOrders: getOrderStatus("Active", result).length,
-          cancelledOrders: getOrderStatus("Cancelled", result).length,
-          completedOrders: getOrderStatus("Completed", result).length,
-          orders: result[0].id == null ? [] : result,
-        };
+          name: `${userWithOrders?.firstName} ${userWithOrders?.lastName}`,
+          allOrders: orders.length,
+          activeOrders: getOrderStatus("Active", orders).length,
+          cancelledOrders: getOrderStatus("Cancelled", orders).length,
+          completedOrders: getOrderStatus("Completed", orders).length,
+          orders:orders
+        }
 
         res.send(userInfo);
-      });
 
-      break;
-
-    case 401:
-      res.sendStatus(401);
-
-      break;
-
-    case 403:
-      res.sendStatus(403);
-
-      break;
-  }
-});
-
-router.post("/new", verifyToken, (req: Request, res: Response) => {
-  const { statusCode, tokenInfo } = req;
-
-  switch (statusCode) {
-    case 200:
-      const form = new formidable.IncomingForm();
-
-      const rootPath = path.dirname(__dirname);
-
-      form.parse(req, (err, fields, files: formidable.Files) => {
-        if (err) {
-          console.log(err);
-        }
-
-        const folder = `folder${generateId(100000)}`;
-
-        if (files.attachedFiles) {
-          // create folder to store attached files
-          fs.mkdir(path.join(rootPath, "public", "files", folder), (err) => {
-            if (err) {
-              console.log(err);
-            }
-          });
-
-          for (let i = 0; i < files.attachedFiles.length; i++) {
-            const file = files.attachedFiles[i];
-
-            const oldpath = file.filepath;
-
-            const newPath = `${path.join(
-              rootPath,
-              "public",
-              "files",
-              folder
-            )}/${file.originalFilename}`;
-
-            // store the file in created folder
-            fs.readFile(oldpath, (err, data) => {
-              if (err) {
-                console.log(err);
-              }
-
-              fs.writeFile(newPath, data, (err) => {
-                if (err) {
-                  console.log(err);
-                }
-              });
-            });
-          }
-        }
-
-        const {
-          service,
-          gradeLevel,
-          subject,
-          instructions,
-          pagesOrwords,
-          amount,
-          deadline,
-          time,
-          sources,
-          style,
-          topic,
-          language,
-        } = fields as formidable.Fields;
-
-        let orderId = generateId(100000000);
-
-        let status = "Active";
-
-        let createdBy = tokenInfo?.uuid;
-
-        let newFiles = files.attachedFiles ? folder : "";
-
-        let orderDetails: OrderDetails = [
-          orderId,
-          createdBy,
-          service ? service[0] : "",
-          subject ? subject[0] : "",
-          gradeLevel ? gradeLevel[0] : "",
-          style ? style[0] : "",
-          language ? language[0] : "",
-          sources ? sources[0] : "",
-          newFiles,
-          instructions ? instructions[0] : "",
-          topic ? topic[0] : "",
-          pagesOrwords ? pagesOrwords[0] : "",
-          amount ? amount[0] : "",
-          deadline ? deadline[0] : "",
-          time ? time[0] : "",
-          status,
-        ];
-
-        const createOrder =
-          "INSERT INTO orders (order_id, created_by, service, subject, level, ref_style, language, sources, files, instructions, topic, words_or_pages, amount, date_deadline, time_deadline, status) VALUES (?)";
-
-        dbConnection.query(createOrder, [orderDetails], (err) => {
-          if (err) {
-            console.log(err);
-          }
-
-          res.sendStatus(200);
-        });
-      });
-      break;
-
-    case 401:
-      res.sendStatus(401);
-
-      break;
-
-    case 403:
-      res.sendStatus(403);
-
-      break;
-  }
-});
-
-router.post("/revision", verifyToken, (req: Request, res: Response) => {
-  const { statusCode } = req;
-
-  switch (statusCode) {
-    case 200:
-      const { orderId, modificationType, modificationReason } = req.body;
-
-      let modification_id = generateId(100000000);
-      let order_id = orderId;
-      let type = modificationType;
-      let reason = modificationReason;
-
-      let orderModifications = [modification_id, order_id, type, reason];
-
-      const modifyOrder = `INSERT INTO orderModification (modification_id, order_id, modification_type, reason) VALUES (?)`;
-
-      dbConnection.query(modifyOrder, [orderModifications], (err, result) => {
-        if (err) {
-          console.log(err);
-        } else {
-          res.sendStatus(200);
-        }
-      });
-
-      break;
-
-    case 401:
-      res.sendStatus(401);
-
-      break;
-
-    case 403:
-      res.sendStatus(403);
-
-      break;
-  }
-});
-
-router.post("/order/send/:id/", verifyToken, (req: Request, res: Response) => {
-  const { statusCode, tokenInfo } = req;
-
-  const revisionGracePeriod = (dispatchTime: Date): number => {
-    const gracePeriod = dispatchTime.getTime() + 1000 * 3600 * 24 * 7;
-
-    return gracePeriod;
-  };
-
-  switch (statusCode) {
-    case 200:
-      if (tokenInfo.role === "Admin") {
-        const form = new formidable.IncomingForm();
-
-        const rootPath = path.dirname(__dirname);
-
-        form.parse(
-          req,
-          (err, fields: formidable.Fields, files: formidable.Files) => {
-            if (err) {
-              console.log(err);
-            }
-
-            const folder = `folder${generateId(100000)}`;
-
-            fs.mkdir(path.join(rootPath, "public", "files", folder), (err) => {
-              if (err) {
-                console.log(err);
-              }
-            });
-
-            // check whether there documents are an array
-            if (files && Array.isArray(files.documents)) {
-              for (let i = 0; i < files.documents.length; i++) {
-                const file = files.documents[i];
-
-                const oldpath = file.filepath;
-
-                const newPath = `${path.join(
-                  rootPath,
-                  "public",
-                  "files",
-                  folder
-                )}/${file.originalFilename}`;
-
-                fs.readFile(oldpath, (err, data) => {
-                  if (err) {
-                    console.log(err);
-                  }
-
-                  fs.writeFile(newPath, data, (err) => {
-                    if (err) {
-                      console.log(err);
-                    }
-                  });
-                });
-              }
-            }
-
-            const { email, id, topic, additionalInfo, fileNames } = fields;
-
-            const attachments = [];
-
-            // assert that fileNames is an array
-            if (fileNames && Array.isArray(fileNames)) {
-              for (let i = 0; i < fileNames?.length; i++) {
-                attachments.push({
-                  filename: fileNames[i],
-                  path: `${path.join(rootPath, "public", "files", folder)}/${
-                    fileNames[i]
-                  }`,
-                });
-              }
-            }
-
-            const dispatchTime = new Date(Date.now());
-
-            const gracePeriod = revisionGracePeriod(dispatchTime);
-
-            const mailOptions = {
-              from: senderEmail,
-              to: email?.[0],
-              subject: `Order${id?.[0]} - ${topic?.[0]}`,
-              text: `Dear customer, the above referenced order has been completed and is attached in this mail. Kindly go through it to 
-                        confirm that it meets your requirements and standards. Incase of any changes, you have up to 7 days (${new Date(
-                          gracePeriod
-                        ).toUTCString()}) 
-                        to request a revision, for free. Please note that at the elapse of this period (7 days), you will no longer be able to request a revision for this work. ${
-                          additionalInfo?.[0] === "" ? "" : additionalInfo?.[0]
-                        }`,
-              attachments: attachments,
-            };
-
-            transporter.sendMail(mailOptions, (err, info) => {
-              if (err) {
-                console.log(err);
-              } else {
-                const insert = `INSERT INTO sentOrders (transaction_id, order_id, files, additionalMessage, timestamp) VALUES (?)`;
-
-                const transactionId = generateId(100000);
-
-                const sentOrderDetails = [
-                  transactionId,
-                  id?.[0],
-                  folder,
-                  additionalInfo?.[0],
-                  dispatchTime,
-                ];
-
-                dbConnection.query(
-                  insert,
-                  [sentOrderDetails],
-                  (err, result) => {
-                    if (err) {
-                      console.log(err);
-                    }
-
-                    res.sendStatus(200);
-                  }
-                );
-              }
-            });
-          }
-        );
-      } else {
-        res.sendStatus(401);
+      } catch (err) {
+        console.log(err);
       }
 
       break;
@@ -565,174 +304,472 @@ router.post("/order/send/:id/", verifyToken, (req: Request, res: Response) => {
   }
 });
 
-router.put(
-  "/order/update/files/:id",
-  verifyToken,
-  (req: Request, res: Response) => {
-    const { statusCode } = req;
+// router.post("/new", verifyToken, (req: Request, res: Response) => {
+//   const { statusCode, tokenInfo } = req;
 
-    switch (statusCode) {
-      case 200:
-        const form = new formidable.IncomingForm();
+//   switch (statusCode) {
+//     case 200:
+//       const form = new formidable.IncomingForm();
 
-        form.parse(req, (err, fields, files: formidable.Files) => {
-          if (err) {
-            console.log(err);
-          }
+//       const rootPath = path.dirname(__dirname);
 
-          const checkFileFolder = `SELECT (files) FROM orders WHERE order_id=?`;
+//       form.parse(req, (err, fields, files: formidable.Files) => {
+//         if (err) {
+//           console.log(err);
+//         }
 
-          dbConnection.query(checkFileFolder, req.params.id, (err, result) => {
-            if (err) {
-              console.log(err);
-            }
+//         const folder = `folder${generateId(100000)}`;
 
-            if (result[0].files === "") {
-              const rootPath = path.dirname(__dirname);
+//         if (files.attachedFiles) {
+//           // create folder to store attached files
+//           fs.mkdir(path.join(rootPath, "public", "files", folder), (err) => {
+//             if (err) {
+//               console.log(err);
+//             }
+//           });
 
-              const folder = `folder${generateId(100000)}`;
+//           for (let i = 0; i < files.attachedFiles.length; i++) {
+//             const file = files.attachedFiles[i];
 
-              fs.mkdir(
-                path.join(rootPath, "public", "files", folder),
-                (err) => {
-                  if (err) {
-                    console.log(err);
-                  }
-                }
-              );
+//             const oldpath = file.filepath;
 
-              // assert that additionalFiles is an array
-              if (files && Array.isArray(files.additionalFiles)) {
-                for (let i = 0; i < files.additionalFiles.length; i++) {
-                  const currentFile = files.additionalFiles[i];
+//             const newPath = `${path.join(
+//               rootPath,
+//               "public",
+//               "files",
+//               folder
+//             )}/${file.originalFilename}`;
 
-                  const oldPath = currentFile.filepath;
+//             // store the file in created folder
+//             fs.readFile(oldpath, (err, data) => {
+//               if (err) {
+//                 console.log(err);
+//               }
 
-                  const newPath = `${path.join(
-                    rootPath,
-                    "public",
-                    "files",
-                    folder
-                  )}/${currentFile.originalFilename}`;
+//               fs.writeFile(newPath, data, (err) => {
+//                 if (err) {
+//                   console.log(err);
+//                 }
+//               });
+//             });
+//           }
+//         }
 
-                  fs.readFile(oldPath, (err, data) => {
-                    if (err) {
-                      console.log(err);
-                    }
+//         const {
+//           service,
+//           gradeLevel,
+//           subject,
+//           instructions,
+//           pagesOrwords,
+//           amount,
+//           deadline,
+//           time,
+//           sources,
+//           style,
+//           topic,
+//           language,
+//         } = fields as formidable.Fields;
 
-                    fs.writeFile(newPath, data, (err) => {
-                      if (err) {
-                        console.log(err);
-                      }
-                    });
-                  });
-                }
-              }
+//         let orderId = generateId(100000000);
 
-              const updateFiles = `UPDATE orders SET files=? WHERE order_id=${req.params.id}`;
+//         let status = "Active";
 
-              dbConnection.query(updateFiles, folder, (err) => {
-                if (err) {
-                  console.log(err);
-                } else {
-                  res.sendStatus(200);
-                }
-              });
-            } else {
-              const rootPath = path.dirname(__dirname);
+//         let createdBy = tokenInfo?.uuid;
 
-              const filesFolder = result[0].files;
+//         let newFiles = files.attachedFiles ? folder : "";
 
-              if (files && Array.isArray(files.additionalFiles)) {
-                for (let i = 0; i < files.additionalFiles.length; i++) {
-                  const currentFile = files.additionalFiles[i];
+//         let orderDetails: OrderDetails = [
+//           orderId,
+//           createdBy,
+//           service ? service[0] : "",
+//           subject ? subject[0] : "",
+//           gradeLevel ? gradeLevel[0] : "",
+//           style ? style[0] : "",
+//           language ? language[0] : "",
+//           sources ? sources[0] : "",
+//           newFiles,
+//           instructions ? instructions[0] : "",
+//           topic ? topic[0] : "",
+//           pagesOrwords ? pagesOrwords[0] : "",
+//           amount ? amount[0] : "",
+//           deadline ? deadline[0] : "",
+//           time ? time[0] : "",
+//           status,
+//         ];
 
-                  const oldPath = currentFile.filepath;
+//         const createOrder =
+//           "INSERT INTO orders (order_id, created_by, service, subject, level, ref_style, language, sources, files, instructions, topic, words_or_pages, amount, date_deadline, time_deadline, status) VALUES (?)";
 
-                  const newPath = `${path.join(
-                    rootPath,
-                    "public",
-                    "files",
-                    filesFolder
-                  )}/${currentFile.originalFilename}`;
+//         dbConnection.query(createOrder, [orderDetails], (err) => {
+//           if (err) {
+//             console.log(err);
+//           }
 
-                  fs.readFile(oldPath, (err, data) => {
-                    if (err) {
-                      console.log(err);
-                    }
+//           res.sendStatus(200);
+//         });
+//       });
+//       break;
 
-                    fs.writeFile(newPath, data, (err) => {
-                      if (err) {
-                        console.log(err);
-                      }
-                    });
-                  });
-                }
-              }
+//     case 401:
+//       res.sendStatus(401);
 
-              res.sendStatus(200);
-            }
-          });
-        });
+//       break;
 
-        break;
+//     case 403:
+//       res.sendStatus(403);
 
-      case 401:
-        res.sendStatus(401);
+//       break;
+//   }
+// });
 
-        break;
+// router.post("/revision", verifyToken, (req: Request, res: Response) => {
+//   const { statusCode } = req;
 
-      case 403:
-        res.sendStatus(403);
+//   switch (statusCode) {
+//     case 200:
+//       const { orderId, modificationType, modificationReason } = req.body;
 
-        break;
-    }
-  }
-);
+//       let modification_id = generateId(100000000);
+//       let order_id = orderId;
+//       let type = modificationType;
+//       let reason = modificationReason;
 
-router.get(
-  "/order/dispatchTime/:id",
-  verifyToken,
-  (req: Request, res: Response) => {
-    const { statusCode } = req;
+//       let orderModifications = [modification_id, order_id, type, reason];
 
-    switch (statusCode) {
-      case 200:
-        let getTime = `SELECT timestamp FROM sentOrders where order_id=?`;
+//       const modifyOrder = `INSERT INTO orderModification (modification_id, order_id, modification_type, reason) VALUES (?)`;
 
-        dbConnection.query(getTime, req.params.id, (err, result) => {
-          if (err) {
-            res.sendStatus(401);
-          }
+//       dbConnection.query(modifyOrder, [orderModifications], (err, result) => {
+//         if (err) {
+//           console.log(err);
+//         } else {
+//           res.sendStatus(200);
+//         }
+//       });
 
-          if (result.length) {
-            res.json({
-              code: 200,
-              message: result[0].timestamp,
-            });
-          } else {
-            res.json({
-              code: 404,
-              message:
-                "This order has not yet been sent to you. Kindly wait until it is sent before you request a revision",
-            });
-          }
-        });
+//       break;
 
-        break;
+//     case 401:
+//       res.sendStatus(401);
 
-      case 401:
-        res.sendStatus(401);
+//       break;
 
-        break;
+//     case 403:
+//       res.sendStatus(403);
 
-      case 403:
-        res.sendStatus(403);
+//       break;
+//   }
+// });
 
-        break;
-    }
-  }
-);
+// router.post("/order/send/:id/", verifyToken, (req: Request, res: Response) => {
+//   const { statusCode, tokenInfo } = req;
+
+//   const revisionGracePeriod = (dispatchTime: Date): number => {
+//     const gracePeriod = dispatchTime.getTime() + 1000 * 3600 * 24 * 7;
+
+//     return gracePeriod;
+//   };
+
+//   switch (statusCode) {
+//     case 200:
+//       if (tokenInfo.role === "Admin") {
+//         const form = new formidable.IncomingForm();
+
+//         const rootPath = path.dirname(__dirname);
+
+//         form.parse(
+//           req,
+//           (err, fields: formidable.Fields, files: formidable.Files) => {
+//             if (err) {
+//               console.log(err);
+//             }
+
+//             const folder = `folder${generateId(100000)}`;
+
+//             fs.mkdir(path.join(rootPath, "public", "files", folder), (err) => {
+//               if (err) {
+//                 console.log(err);
+//               }
+//             });
+
+//             // check whether there documents are an array
+//             if (files && Array.isArray(files.documents)) {
+//               for (let i = 0; i < files.documents.length; i++) {
+//                 const file = files.documents[i];
+
+//                 const oldpath = file.filepath;
+
+//                 const newPath = `${path.join(
+//                   rootPath,
+//                   "public",
+//                   "files",
+//                   folder
+//                 )}/${file.originalFilename}`;
+
+//                 fs.readFile(oldpath, (err, data) => {
+//                   if (err) {
+//                     console.log(err);
+//                   }
+
+//                   fs.writeFile(newPath, data, (err) => {
+//                     if (err) {
+//                       console.log(err);
+//                     }
+//                   });
+//                 });
+//               }
+//             }
+
+//             const { email, id, topic, additionalInfo, fileNames } = fields;
+
+//             const attachments = [];
+
+//             // assert that fileNames is an array
+//             if (fileNames && Array.isArray(fileNames)) {
+//               for (let i = 0; i < fileNames?.length; i++) {
+//                 attachments.push({
+//                   filename: fileNames[i],
+//                   path: `${path.join(rootPath, "public", "files", folder)}/${
+//                     fileNames[i]
+//                   }`,
+//                 });
+//               }
+//             }
+
+//             const dispatchTime = new Date(Date.now());
+
+//             const gracePeriod = revisionGracePeriod(dispatchTime);
+
+//             const mailOptions = {
+//               from: senderEmail,
+//               to: email?.[0],
+//               subject: `Order${id?.[0]} - ${topic?.[0]}`,
+//               text: `Dear customer, the above referenced order has been completed and is attached in this mail. Kindly go through it to 
+//                         confirm that it meets your requirements and standards. Incase of any changes, you have up to 7 days (${new Date(
+//                           gracePeriod
+//                         ).toUTCString()}) 
+//                         to request a revision, for free. Please note that at the elapse of this period (7 days), you will no longer be able to request a revision for this work. ${
+//                           additionalInfo?.[0] === "" ? "" : additionalInfo?.[0]
+//                         }`,
+//               attachments: attachments,
+//             };
+
+//             transporter.sendMail(mailOptions, (err, info) => {
+//               if (err) {
+//                 console.log(err);
+//               } else {
+//                 const insert = `INSERT INTO sentOrders (transaction_id, order_id, files, additionalMessage, timestamp) VALUES (?)`;
+
+//                 const transactionId = generateId(100000);
+
+//                 const sentOrderDetails = [
+//                   transactionId,
+//                   id?.[0],
+//                   folder,
+//                   additionalInfo?.[0],
+//                   dispatchTime,
+//                 ];
+
+//                 dbConnection.query(
+//                   insert,
+//                   [sentOrderDetails],
+//                   (err, result) => {
+//                     if (err) {
+//                       console.log(err);
+//                     }
+
+//                     res.sendStatus(200);
+//                   }
+//                 );
+//               }
+//             });
+//           }
+//         );
+//       } else {
+//         res.sendStatus(401);
+//       }
+
+//       break;
+
+//     case 401:
+//       res.sendStatus(401);
+
+//       break;
+
+//     case 403:
+//       res.sendStatus(403);
+
+//       break;
+//   }
+// });
+
+// router.put(
+//   "/order/update/files/:id",
+//   verifyToken,
+//   (req: Request, res: Response) => {
+//     const { statusCode } = req;
+
+//     switch (statusCode) {
+//       case 200:
+//         const form = new formidable.IncomingForm();
+
+//         form.parse(req, (err, fields, files: formidable.Files) => {
+//           if (err) {
+//             console.log(err);
+//           }
+
+//           const checkFileFolder = `SELECT (files) FROM orders WHERE order_id=?`;
+
+//           dbConnection.query(checkFileFolder, req.params.id, (err, result) => {
+//             if (err) {
+//               console.log(err);
+//             }
+
+//             if (result[0].files === "") {
+//               const rootPath = path.dirname(__dirname);
+
+//               const folder = `folder${generateId(100000)}`;
+
+//               fs.mkdir(
+//                 path.join(rootPath, "public", "files", folder),
+//                 (err) => {
+//                   if (err) {
+//                     console.log(err);
+//                   }
+//                 }
+//               );
+
+//               // assert that additionalFiles is an array
+//               if (files && Array.isArray(files.additionalFiles)) {
+//                 for (let i = 0; i < files.additionalFiles.length; i++) {
+//                   const currentFile = files.additionalFiles[i];
+
+//                   const oldPath = currentFile.filepath;
+
+//                   const newPath = `${path.join(
+//                     rootPath,
+//                     "public",
+//                     "files",
+//                     folder
+//                   )}/${currentFile.originalFilename}`;
+
+//                   fs.readFile(oldPath, (err, data) => {
+//                     if (err) {
+//                       console.log(err);
+//                     }
+
+//                     fs.writeFile(newPath, data, (err) => {
+//                       if (err) {
+//                         console.log(err);
+//                       }
+//                     });
+//                   });
+//                 }
+//               }
+
+//               const updateFiles = `UPDATE orders SET files=? WHERE order_id=${req.params.id}`;
+
+//               dbConnection.query(updateFiles, folder, (err) => {
+//                 if (err) {
+//                   console.log(err);
+//                 } else {
+//                   res.sendStatus(200);
+//                 }
+//               });
+//             } else {
+//               const rootPath = path.dirname(__dirname);
+
+//               const filesFolder = result[0].files;
+
+//               if (files && Array.isArray(files.additionalFiles)) {
+//                 for (let i = 0; i < files.additionalFiles.length; i++) {
+//                   const currentFile = files.additionalFiles[i];
+
+//                   const oldPath = currentFile.filepath;
+
+//                   const newPath = `${path.join(
+//                     rootPath,
+//                     "public",
+//                     "files",
+//                     filesFolder
+//                   )}/${currentFile.originalFilename}`;
+
+//                   fs.readFile(oldPath, (err, data) => {
+//                     if (err) {
+//                       console.log(err);
+//                     }
+
+//                     fs.writeFile(newPath, data, (err) => {
+//                       if (err) {
+//                         console.log(err);
+//                       }
+//                     });
+//                   });
+//                 }
+//               }
+
+//               res.sendStatus(200);
+//             }
+//           });
+//         });
+
+//         break;
+
+//       case 401:
+//         res.sendStatus(401);
+
+//         break;
+
+//       case 403:
+//         res.sendStatus(403);
+
+//         break;
+//     }
+//   }
+// );
+
+// router.get(
+//   "/order/dispatchTime/:id",
+//   verifyToken,
+//   (req: Request, res: Response) => {
+//     const { statusCode } = req;
+
+//     switch (statusCode) {
+//       case 200:
+//         let getTime = `SELECT timestamp FROM sentOrders where order_id=?`;
+
+//         dbConnection.query(getTime, req.params.id, (err, result) => {
+//           if (err) {
+//             res.sendStatus(401);
+//           }
+
+//           if (result.length) {
+//             res.json({
+//               code: 200,
+//               message: result[0].timestamp,
+//             });
+//           } else {
+//             res.json({
+//               code: 404,
+//               message:
+//                 "This order has not yet been sent to you. Kindly wait until it is sent before you request a revision",
+//             });
+//           }
+//         });
+
+//         break;
+
+//       case 401:
+//         res.sendStatus(401);
+
+//         break;
+
+//       case 403:
+//         res.sendStatus(403);
+
+//         break;
+//     }
+//   }
+// );
 
 router.post("/cancel-order", verifyToken, (req: Request, res: Response) => {
   const { statusCode } = req;
