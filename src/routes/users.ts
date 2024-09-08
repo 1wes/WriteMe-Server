@@ -125,6 +125,13 @@ router.get("/user-details", verifyToken, async (req: Request, res: Response) => 
   }
 });
 
+router.get("/logout", (req: Request, res: Response) => {
+
+  res.clearCookie("authorizationToken", { domain: "localhost", path: "/" });
+
+  res.sendStatus(200);
+});
+
 router.get("/check-token", verifyToken, (req: Request, res: Response) => {
   const { tokenInfo } = req;
 
