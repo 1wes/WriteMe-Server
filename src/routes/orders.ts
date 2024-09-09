@@ -33,30 +33,36 @@ router.get("/admin", verifyToken, async (req: Request, res: Response) => {
 
     const username = `${tokenInfo.firstName} ${tokenInfo.lastName}`;
 
-    let ordersWithUserDetails = await db.order.findMany({
-      orderBy: {
-        id: "desc",
-      },
-      include: {
-        user: {
-          select: {
-            firstName: true,
-            lastName: true,
+    try {
+      let ordersWithUserDetails = await db.order.findMany({
+        orderBy: {
+          id: "desc",
+        },
+        include: {
+          user: {
+            select: {
+              firstName: true,
+              lastName: true,
+            },
           },
         },
-      },
-    });
+      });
+  
+      const orders: Orders = {
+        username: username,
+        totalOrders: ordersWithUserDetails?.length,
+        allActiveOrders: getOrderStatus("Active", ordersWithUserDetails).length,
+        allCancelledOrders: getOrderStatus("Cancelled", ordersWithUserDetails).length,
+        allCompletedOrders: getOrderStatus("Completed", ordersWithUserDetails).length,
+        allOrders: ordersWithUserDetails.length === 0 ? [] : ordersWithUserDetails,
+      };
+  
+      res.send(orders);
+    }catch(err){
 
-    const orders: Orders = {
-      username: username,
-      totalOrders: ordersWithUserDetails?.length,
-      allActiveOrders: getOrderStatus("Active", ordersWithUserDetails).length,
-      allCancelledOrders: getOrderStatus("Cancelled", ordersWithUserDetails).length,
-      allCompletedOrders: getOrderStatus("Completed", ordersWithUserDetails).length,
-      allOrders: ordersWithUserDetails.length === 0 ? [] : ordersWithUserDetails,
-    };
-
-    res.send(orders);
+      console.log(err);
+      res.sendStatus(500);
+    }
   } else {
     return res.sendStatus(401);
   }
