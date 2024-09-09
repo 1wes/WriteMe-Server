@@ -6,14 +6,14 @@ import fs from "fs";
 import generateId from "../utils/generateId";
 import transporter from "../utils/mail";
 import envConfig from "../env-config";
-import { OrderDetails } from "../types/interface";
-import db from '../utils/prisma';
+import { OrderDetails, Orders } from "../types/interface";
+import db from "../utils/prisma";
 
 const router = express.Router();
 
 const { senderEmail } = envConfig;
 
-router.use((req:Request, res:Response, next: NextFunction) => {
+router.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
@@ -25,73 +25,40 @@ const getOrderStatus = (status: string, result: Order[]): Order[] => {
   return result.filter((orders: Order) => orders.status === status);
 };
 
-router.get("/admin", verifyToken, (req: Request, res: Response) => {
-  const { statusCode, tokenInfo } = req;
-  switch (statusCode) {
-    case 200:
-      if (tokenInfo.role === "Admin") {
+router.get("/admin", verifyToken, async (req: Request, res: Response) => {
 
-        const username = `${tokenInfo.firstName} ${tokenInfo.lastName}`;
+  const { tokenInfo } = req;
 
-        let ordersWithUserDetails = db.order.findMany({
-          orderBy: {
-            id: 'desc'
+  if (tokenInfo.role === "Admin") {
+
+    const username = `${tokenInfo.firstName} ${tokenInfo.lastName}`;
+
+    let ordersWithUserDetails = await db.order.findMany({
+      orderBy: {
+        id: "desc",
+      },
+      include: {
+        user: {
+          select: {
+            firstName: true,
+            lastName: true,
           },
-          include: {
-            user: {
-              select: {
-                firstName: true,
-                lastName: true,
-              }
-            }
-          }
-        });
+        },
+      },
+    });
 
-        // console.log(ordersWithUserDetails);
+    const orders: Orders = {
+      username: username,
+      totalOrders: ordersWithUserDetails?.length,
+      allActiveOrders: getOrderStatus("Active", ordersWithUserDetails).length,
+      allCancelledOrders: getOrderStatus("Cancelled", ordersWithUserDetails).length,
+      allCompletedOrders: getOrderStatus("Completed", ordersWithUserDetails).length,
+      allOrders: ordersWithUserDetails.length === 0 ? [] : ordersWithUserDetails,
+    };
 
-        // const allOrders = `SELECT orders.*, first_name, last_name FROM orders INNER JOIN users ON orders.created_by=uuid ORDER by id DESC`;
-
-        // dbConnection.query(allOrders, (err, result) => {
-        //   if (err) {
-        //     console.log(err);
-        //   }
-
-        //   // orders interface
-        //   interface Orders {
-        //     username: string;
-        //     totalOrders: number;
-        //     allActiveOrders: number;
-        //     allCancelledOrders: number;
-        //     allCompletedOrders: number;
-        //     allOrders: [];
-        //   }
-
-        //   const orders: Orders = {
-        //     username: username,
-        //     totalOrders: result.length,
-        //     allActiveOrders: getOrderStatus("Active", result).length,
-        //     allCancelledOrders: getOrderStatus("Cancelled", result).length,
-        //     allCompletedOrders: getOrderStatus("Completed", result).length,
-        //     allOrders: result.length === 0 ? [] : result,
-        //   };
-
-        //   res.send(orders);
-        // });
-      } else {
-        return res.sendStatus(401);
-      }
-
-      break;
-
-    case 401:
-      res.sendStatus(401);
-
-      break;
-
-    case 403:
-      res.sendStatus(403);
-
-      break;
+    res.send(orders);
+  } else {
+    return res.sendStatus(401);
   }
 });
 
@@ -245,22 +212,19 @@ router.get("/admin", verifyToken, (req: Request, res: Response) => {
 //   }
 // );
 
-router.get("/all", verifyToken, async(req: Request, res: Response) => {
-
+router.get("/all", verifyToken, async (req: Request, res: Response) => {
   const { statusCode, tokenInfo } = req;
 
   switch (statusCode) {
     case 200:
-
       try {
-  
         let userWithOrders = await db.user.findUnique({
           where: {
             uuid: tokenInfo.uuid,
           },
           select: {
             firstName: true,
-            lastName:true,
+            lastName: true,
             orders: {
               select: {
                 id: true,
@@ -268,9 +232,9 @@ router.get("/all", verifyToken, async(req: Request, res: Response) => {
                 topic: true,
                 status: true,
                 dateDeadline: true,
-              }
-            }
-          }
+              },
+            },
+          },
         });
 
         const orders = userWithOrders?.orders || [];
@@ -281,11 +245,10 @@ router.get("/all", verifyToken, async(req: Request, res: Response) => {
           activeOrders: getOrderStatus("Active", orders).length,
           cancelledOrders: getOrderStatus("Cancelled", orders).length,
           completedOrders: getOrderStatus("Completed", orders).length,
-          orders:orders
-        }
+          orders: orders,
+        };
 
         res.send(userInfo);
-
       } catch (err) {
         console.log(err);
       }
@@ -543,10 +506,10 @@ router.get("/all", verifyToken, async(req: Request, res: Response) => {
 //               from: senderEmail,
 //               to: email?.[0],
 //               subject: `Order${id?.[0]} - ${topic?.[0]}`,
-//               text: `Dear customer, the above referenced order has been completed and is attached in this mail. Kindly go through it to 
+//               text: `Dear customer, the above referenced order has been completed and is attached in this mail. Kindly go through it to
 //                         confirm that it meets your requirements and standards. Incase of any changes, you have up to 7 days (${new Date(
 //                           gracePeriod
-//                         ).toUTCString()}) 
+//                         ).toUTCString()})
 //                         to request a revision, for free. Please note that at the elapse of this period (7 days), you will no longer be able to request a revision for this work. ${
 //                           additionalInfo?.[0] === "" ? "" : additionalInfo?.[0]
 //                         }`,
@@ -772,7 +735,6 @@ router.get("/all", verifyToken, async(req: Request, res: Response) => {
 // );
 
 router.post("/cancel-order", verifyToken, (req: Request, res: Response) => {
-
   // order cancellation logic
 });
 
