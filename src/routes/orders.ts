@@ -26,11 +26,9 @@ const getOrderStatus = (status: string, result: Order[]): Order[] => {
 };
 
 router.get("/admin", verifyToken, async (req: Request, res: Response) => {
-
   const { tokenInfo } = req;
 
   if (tokenInfo.role === "Admin") {
-
     const username = `${tokenInfo.firstName} ${tokenInfo.lastName}`;
 
     try {
@@ -47,19 +45,21 @@ router.get("/admin", verifyToken, async (req: Request, res: Response) => {
           },
         },
       });
-  
+
       const orders: Orders = {
         username: username,
         totalOrders: ordersWithUserDetails?.length,
         allActiveOrders: getOrderStatus("Active", ordersWithUserDetails).length,
-        allCancelledOrders: getOrderStatus("Cancelled", ordersWithUserDetails).length,
-        allCompletedOrders: getOrderStatus("Completed", ordersWithUserDetails).length,
-        allOrders: ordersWithUserDetails.length === 0 ? [] : ordersWithUserDetails,
+        allCancelledOrders: getOrderStatus("Cancelled", ordersWithUserDetails)
+          .length,
+        allCompletedOrders: getOrderStatus("Completed", ordersWithUserDetails)
+          .length,
+        allOrders:
+          ordersWithUserDetails.length === 0 ? [] : ordersWithUserDetails,
       };
-  
-      res.send(orders);
-    }catch(err){
 
+      res.send(orders);
+    } catch (err) {
       console.log(err);
       res.sendStatus(500);
     }
@@ -219,57 +219,41 @@ router.get("/admin", verifyToken, async (req: Request, res: Response) => {
 // );
 
 router.get("/all", verifyToken, async (req: Request, res: Response) => {
-  const { statusCode, tokenInfo } = req;
-
-  switch (statusCode) {
-    case 200:
-      try {
-        let userWithOrders = await db.user.findUnique({
-          where: {
-            uuid: tokenInfo.uuid,
-          },
+  const { tokenInfo } = req;
+  try {
+    let userWithOrders = await db.user.findUnique({
+      where: {
+        uuid: tokenInfo.uuid,
+      },
+      select: {
+        firstName: true,
+        lastName: true,
+        orders: {
           select: {
-            firstName: true,
-            lastName: true,
-            orders: {
-              select: {
-                id: true,
-                orderId: true,
-                topic: true,
-                status: true,
-                dateDeadline: true,
-              },
-            },
+            id: true,
+            orderId: true,
+            topic: true,
+            status: true,
+            dateDeadline: true,
           },
-        });
+        },
+      },
+    });
 
-        const orders = userWithOrders?.orders || [];
+    const orders = userWithOrders?.orders || [];
 
-        let userInfo = {
-          name: `${userWithOrders?.firstName} ${userWithOrders?.lastName}`,
-          allOrders: orders.length,
-          activeOrders: getOrderStatus("Active", orders).length,
-          cancelledOrders: getOrderStatus("Cancelled", orders).length,
-          completedOrders: getOrderStatus("Completed", orders).length,
-          orders: orders,
-        };
+    let userInfo = {
+      name: `${userWithOrders?.firstName} ${userWithOrders?.lastName}`,
+      allOrders: orders.length,
+      activeOrders: getOrderStatus("Active", orders).length,
+      cancelledOrders: getOrderStatus("Cancelled", orders).length,
+      completedOrders: getOrderStatus("Completed", orders).length,
+      orders: orders,
+    };
 
-        res.send(userInfo);
-      } catch (err) {
-        console.log(err);
-      }
-
-      break;
-
-    case 401:
-      res.sendStatus(401);
-
-      break;
-
-    case 403:
-      res.sendStatus(403);
-
-      break;
+    res.send(userInfo);
+  } catch (err) {
+    console.log(err);
   }
 });
 
