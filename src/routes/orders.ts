@@ -772,24 +772,8 @@ router.get("/all", verifyToken, async(req: Request, res: Response) => {
 // );
 
 router.post("/cancel-order", verifyToken, (req: Request, res: Response) => {
-  const { statusCode } = req;
 
-  switch (statusCode) {
-    case 200:
-      res.sendStatus(200);
-
-      break;
-
-    case 401:
-      res.sendStatus(401);
-
-      break;
-
-    case 403:
-      res.sendStatus(403);
-
-      break;
-  }
+  // order cancellation logic
 });
 
 export default router;
