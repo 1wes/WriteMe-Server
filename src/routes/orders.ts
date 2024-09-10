@@ -68,74 +68,73 @@ router.get("/admin", verifyToken, async (req: Request, res: Response) => {
   }
 });
 
-// router.get("/order/:id", verifyToken, (req: Request, res: Response) => {
-//   const { statusCode, tokenInfo } = req;
+router.get("/order/:id", verifyToken, async(req: Request, res: Response) => {
 
-//   switch (statusCode) {
-//     case 200:
-//       if (tokenInfo.role === "Admin") {
-//         const id: string = req.params.id;
+  const { tokenInfo } = req;
 
-//         const username: string = `${tokenInfo.firstName} ${tokenInfo.lastName}`;
+  if (tokenInfo.role === "Admin") {
 
-//         const row = `SELECT orders.*, first_name, last_name, email from orders RIGHT JOIN users on created_by=uuid where order_id=?`;
+    const id: string = req.params.id;
+    const username: string = `${tokenInfo.firstName} ${tokenInfo.lastName}`;
+    const attachments: any = [];
 
-//         const attachments: any = [];
+    try {
 
-//         dbConnection.query(row, id, (err, result) => {
-//           if (err) {
-//             console.log(err);
-//           }
+      let orderWithUserDetails = await db.order.findUnique({
+        where: {
+          orderId: id
+        },
+        include: {
+          user: {
+            select: {
+              firstName: true,
+              lastName: true,
+              email: true,
+            }
+          }
+        }
+      });
 
-//           let order: {};
+      let order: {} = {};
+      
+      if (orderWithUserDetails?.files) {
+        
+        attachments.push(orderWithUserDetails.files);
 
-//           if (result[0].files) {
-//             attachments.push(result[0].files);
+        fs.readdir(
+          path.join(
+            path.dirname(__dirname),
+            "public",
+            "files",
+            orderWithUserDetails.files
+          ),
+          (err, data) => {
+            order = {
+              ...orderWithUserDetails,
+              username: username,
+              attachedFiles: attachments,
+              fileNames: data,
+            };
 
-//             fs.readdir(
-//               path.join(
-//                 path.dirname(__dirname),
-//                 "public",
-//                 "files",
-//                 result[0].files
-//               ),
-//               (err, data) => {
-//                 order = {
-//                   ...result[0],
-//                   username: username,
-//                   attachedFiles: attachments,
-//                   fileNames: data,
-//                 };
-
-//                 res.send(order);
-//               }
-//             );
-//           } else {
-//             order = {
-//               ...result[0],
-//               username: username,
-//               attachedFiles: attachments,
-//             };
-//             res.send(order);
-//           }
-//         });
-//       } else {
-//         return res.sendStatus(401);
-//       }
-
-//       break;
-
-//     case 401:
-//       res.sendStatus(401);
-
-//       break;
-
-//     case 403:
-//       res.sendStatus(403);
-
-//       break;
-//   }
-// });
+            res.send(order);
+          }
+        );
+      } else {
+        order = {
+          ...orderWithUserDetails,
+          username: username,
+          attachedFiles: attachments,
+        };
+      }
+    } catch (err) {
+      
+      console.log(err);
+      res.sendStatus(500);
+    }
+  } else {
+    return res.sendStatus(401);
+  }
+});
 
 // router.get(
 //   "/order/files/:folder/:fileName",
