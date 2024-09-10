@@ -21,7 +21,7 @@ model OrderModification {
 
 model Order {
   id           Int      @default(autoincrement())
-  orderId      String   @map("order_id") @db.VarChar(45)
+  orderId      String   @map("order_id") @db.VarChar(45) @unique()
   createdBy    String   @map("created_by") @db.VarChar(45)
   service      String   @db.VarChar(45)
   subject      String   @db.VarChar(45)
