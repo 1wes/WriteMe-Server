@@ -36,7 +36,7 @@ model Order {
   amount       String   @db.VarChar(45)
   dateDeadline DateTime @map("date_deadline") @db.Date
   timeDeadline DateTime @map("time_deadline") @db.Time(0)
-  status       String   @db.VarChar(45)
+  status       Status   @default(Active)
 
   user         User     @relation(fields: [createdBy], references: [uuid])
 
@@ -77,4 +77,10 @@ enum Role{
   Admin
   Writer
   User
+}
+
+enum Status{
+  Active
+  Completed
+  Cancelled
 }
