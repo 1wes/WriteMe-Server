@@ -156,46 +156,34 @@ router.get(
   }
 );
 
-// router.put(
-//   "/order/update/:orderId",
-//   verifyToken,
-//   (req: Request, res: Response) => {
-//     const { statusCode, tokenInfo } = req;
+router.put(
+  "/order/update/:orderId",
+  verifyToken,
+  async (req: Request, res: Response) => {
+    const { tokenInfo } = req;
 
-//     switch (statusCode) {
-//       case 200:
-//         if (tokenInfo.role === "Admin") {
-//           let { status } = req.body;
+    if (tokenInfo.role === "Admin") {
+      let { status } = req.body;
 
-//           let { orderId } = req.params;
+      let { orderId } = req.params;
 
-//           const updateStatement = `UPDATE orders SET status='${status}' WHERE order_id=?`;
+      try {
+        await db.order.update({
+          where: { orderId },
+          data: {
+            status: status,
+          },
+        });
 
-//           dbConnection.query(updateStatement, orderId, (err) => {
-//             if (err) {
-//               console.log(err);
-//             } else {
-//               res.sendStatus(200);
-//             }
-//           });
-//         } else {
-//           res.sendStatus(401);
-//         }
-
-//         break;
-
-//       case 401:
-//         res.sendStatus(401);
-
-//         break;
-
-//       case 403:
-//         res.sendStatus(403);
-
-//         break;
-//     }
-//   }
-// );
+        res.sendStatus(200);
+      } catch (err) {
+        console.log(err);
+      }
+    } else {
+      res.sendStatus(401);
+    }
+  }
+);
 
 router.get("/all", verifyToken, async (req: Request, res: Response) => {
   const { tokenInfo } = req;
