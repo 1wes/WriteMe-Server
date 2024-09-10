@@ -68,21 +68,18 @@ router.get("/admin", verifyToken, async (req: Request, res: Response) => {
   }
 });
 
-router.get("/order/:id", verifyToken, async(req: Request, res: Response) => {
-
+router.get("/order/:id", verifyToken, async (req: Request, res: Response) => {
   const { tokenInfo } = req;
 
   if (tokenInfo.role === "Admin") {
-
     const id: string = req.params.id;
     const username: string = `${tokenInfo.firstName} ${tokenInfo.lastName}`;
     const attachments: any = [];
 
     try {
-
       let orderWithUserDetails = await db.order.findUnique({
         where: {
-          orderId: id
+          orderId: id,
         },
         include: {
           user: {
@@ -90,15 +87,14 @@ router.get("/order/:id", verifyToken, async(req: Request, res: Response) => {
               firstName: true,
               lastName: true,
               email: true,
-            }
-          }
-        }
+            },
+          },
+        },
       });
 
       let order: {} = {};
-      
+
       if (orderWithUserDetails?.files) {
-        
         attachments.push(orderWithUserDetails.files);
 
         fs.readdir(
@@ -127,7 +123,6 @@ router.get("/order/:id", verifyToken, async(req: Request, res: Response) => {
         };
       }
     } catch (err) {
-      
       console.log(err);
       res.sendStatus(500);
     }
@@ -136,45 +131,30 @@ router.get("/order/:id", verifyToken, async(req: Request, res: Response) => {
   }
 });
 
-// router.get(
-//   "/order/files/:folder/:fileName",
-//   verifyToken,
-//   (req: Request, res: Response) => {
-//     const { statusCode, tokenInfo } = req;
+router.get(
+  "/order/files/:folder/:fileName",
+  verifyToken,
+  (req: Request, res: Response) => {
+    const { tokenInfo } = req;
 
-//     switch (statusCode) {
-//       case 200:
-//         if (tokenInfo.role === "Admin") {
-//           const rootPath = path.dirname(__dirname);
+    if (tokenInfo.role === "Admin") {
+      const rootPath = path.dirname(__dirname);
 
-//           const filePath = path.join(
-//             rootPath,
-//             "public",
-//             "files",
-//             req.params.folder
-//           );
+      const filePath = path.join(
+        rootPath,
+        "public",
+        "files",
+        req.params.folder
+      );
 
-//           const file = path.join(filePath, req.params.fileName);
+      const file = path.join(filePath, req.params.fileName);
 
-//           res.sendFile(file);
-//         } else {
-//           res.sendStatus(401);
-//         }
-
-//         break;
-
-//       case 401:
-//         res.sendStatus(401);
-
-//         break;
-
-//       case 403:
-//         res.sendStatus(403);
-
-//         break;
-//     }
-//   }
-// );
+      res.sendFile(file);
+    } else {
+      res.sendStatus(401);
+    }
+  }
+);
 
 // router.put(
 //   "/order/update/:orderId",
