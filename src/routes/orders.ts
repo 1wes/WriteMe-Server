@@ -342,43 +342,31 @@ router.get("/all", verifyToken, async (req: Request, res: Response) => {
 //   }
 // });
 
-// router.post("/revision", verifyToken, (req: Request, res: Response) => {
-//   const { statusCode } = req;
+router.post("/revision", verifyToken, async(req: Request, res: Response) => {
 
-//   switch (statusCode) {
-//     case 200:
-//       const { orderId, modificationType, modificationReason } = req.body;
+  const { orderId, modificationType, modificationReason } = req.body;
 
-//       let modification_id = generateId(100000000);
-//       let order_id = orderId;
-//       let type = modificationType;
-//       let reason = modificationReason;
+  let modification_id = generateId(100000000);
+  let order_id = orderId;
+  let type = modificationType;
+  let reason = modificationReason;
 
-//       let orderModifications = [modification_id, order_id, type, reason];
+  try {
+    await db.orderModification.create({
+      data: {
+        modificationId: modification_id,
+        orderId: order_id,
+        modificationType:type,
+        reason:reason
+      }
+    })
 
-//       const modifyOrder = `INSERT INTO orderModification (modification_id, order_id, modification_type, reason) VALUES (?)`;
-
-//       dbConnection.query(modifyOrder, [orderModifications], (err, result) => {
-//         if (err) {
-//           console.log(err);
-//         } else {
-//           res.sendStatus(200);
-//         }
-//       });
-
-//       break;
-
-//     case 401:
-//       res.sendStatus(401);
-
-//       break;
-
-//     case 403:
-//       res.sendStatus(403);
-
-//       break;
-//   }
-// });
+    res.sendStatus(200);
+    
+  } catch (err) {
+    console.log(err);
+  }
+});
 
 // router.post("/order/send/:id/", verifyToken, (req: Request, res: Response) => {
 //   const { statusCode, tokenInfo } = req;
