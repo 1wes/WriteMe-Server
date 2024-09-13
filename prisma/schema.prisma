@@ -50,7 +50,7 @@ model SentOrder {
   orderId           String   @map("order_id") @db.VarChar(45)
   files             String   @db.VarChar(45)
   additionalMessage String?  @db.VarChar(5000)
-  timestamp         DateTime @db.DateTime(0)
+  timestamp         DateTime @default(now())
 
   @@id([id, transactionId])
   @@map("sentOrders")
