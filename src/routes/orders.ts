@@ -448,17 +448,16 @@ router.post("/order/send/:id/", verifyToken, (req: Request, res: Response) => {
             await db.sentOrder.create({
               data: {
                 transactionId: transactionId,
-                orderId: id?.[0]??"",
+                orderId: id?.[0] ?? "",
                 files: folder,
                 additionalMessage: additionalInfo?.[0],
-                timestamp:dispatchTime
-              }
+                timestamp: dispatchTime,
+              },
             });
 
             res.sendStatus(200);
-            
           } catch (err) {
-            console.log(err)
+            console.log(err);
           }
         });
       }
@@ -468,130 +467,120 @@ router.post("/order/send/:id/", verifyToken, (req: Request, res: Response) => {
   }
 });
 
-// router.put(
-//   "/order/update/files/:id",
-//   verifyToken,
-//   (req: Request, res: Response) => {
-//     const { statusCode } = req;
+router.put(
+  "/order/update/files/:id",
+  verifyToken,
+  (req: Request, res: Response) => {
+    const form = new formidable.IncomingForm();
 
-//     switch (statusCode) {
-//       case 200:
-//         const form = new formidable.IncomingForm();
+    form.parse(
+      req,
+      async (err, fields: formidable.Fields, files: formidable.Files) => {
+        if (err) {
+          console.log(err);
+        }
 
-//         form.parse(req, (err, fields, files: formidable.Files) => {
-//           if (err) {
-//             console.log(err);
-//           }
+        try {
+          const checkFileFolder = await db.order.findFirst({
+            where: {
+              orderId: req.params.id,
+            },
+            select: {
+              files: true,
+            },
+          });
 
-//           const checkFileFolder = `SELECT (files) FROM orders WHERE order_id=?`;
+          if (checkFileFolder?.files === "") {
+            const rootPath = path.dirname(__dirname);
 
-//           dbConnection.query(checkFileFolder, req.params.id, (err, result) => {
-//             if (err) {
-//               console.log(err);
-//             }
+            const folder = `folder${generateId(100000)}`;
 
-//             if (result[0].files === "") {
-//               const rootPath = path.dirname(__dirname);
+            fs.mkdir(path.join(rootPath, "public", "files", folder), (err) => {
+              if (err) {
+                console.log(err);
+              }
+            });
 
-//               const folder = `folder${generateId(100000)}`;
+            // assert that additionalFiles is an array
+            if (files && Array.isArray(files.additionalFiles)) {
+              for (let i = 0; i < files.additionalFiles.length; i++) {
+                const currentFile = files.additionalFiles[i];
 
-//               fs.mkdir(
-//                 path.join(rootPath, "public", "files", folder),
-//                 (err) => {
-//                   if (err) {
-//                     console.log(err);
-//                   }
-//                 }
-//               );
+                const oldPath = currentFile.filepath;
 
-//               // assert that additionalFiles is an array
-//               if (files && Array.isArray(files.additionalFiles)) {
-//                 for (let i = 0; i < files.additionalFiles.length; i++) {
-//                   const currentFile = files.additionalFiles[i];
+                const newPath = `${path.join(
+                  rootPath,
+                  "public",
+                  "files",
+                  folder
+                )}/${currentFile.originalFilename}`;
 
-//                   const oldPath = currentFile.filepath;
+                fs.readFile(oldPath, (err, data) => {
+                  if (err) {
+                    console.log(err);
+                  }
 
-//                   const newPath = `${path.join(
-//                     rootPath,
-//                     "public",
-//                     "files",
-//                     folder
-//                   )}/${currentFile.originalFilename}`;
+                  fs.writeFile(newPath, data, (err) => {
+                    if (err) {
+                      console.log(err);
+                    }
+                  });
+                });
+              }
+            }
 
-//                   fs.readFile(oldPath, (err, data) => {
-//                     if (err) {
-//                       console.log(err);
-//                     }
+            // update the files column with newly created folder name
+            await db.order.update({
+              where: {
+                orderId: req.params.id,
+              },
+              data: {
+                files: folder,
+              },
+            });
 
-//                     fs.writeFile(newPath, data, (err) => {
-//                       if (err) {
-//                         console.log(err);
-//                       }
-//                     });
-//                   });
-//                 }
-//               }
+            res.sendStatus(200);
+          } else {
+            const rootPath = path.dirname(__dirname);
 
-//               const updateFiles = `UPDATE orders SET files=? WHERE order_id=${req.params.id}`;
+            const filesFolder = checkFileFolder?.files ?? "default-folder";
 
-//               dbConnection.query(updateFiles, folder, (err) => {
-//                 if (err) {
-//                   console.log(err);
-//                 } else {
-//                   res.sendStatus(200);
-//                 }
-//               });
-//             } else {
-//               const rootPath = path.dirname(__dirname);
+            if (files && Array.isArray(files.additionalFiles)) {
+              for (let i = 0; i < files.additionalFiles.length; i++) {
+                const currentFile = files.additionalFiles[i];
 
-//               const filesFolder = result[0].files;
+                const oldPath = currentFile.filepath;
 
-//               if (files && Array.isArray(files.additionalFiles)) {
-//                 for (let i = 0; i < files.additionalFiles.length; i++) {
-//                   const currentFile = files.additionalFiles[i];
+                const newPath = `${path.join(
+                  rootPath,
+                  "public",
+                  "files",
+                  filesFolder
+                )}/${currentFile.originalFilename}`;
 
-//                   const oldPath = currentFile.filepath;
+                fs.readFile(oldPath, (err, data) => {
+                  if (err) {
+                    console.log(err);
+                  }
 
-//                   const newPath = `${path.join(
-//                     rootPath,
-//                     "public",
-//                     "files",
-//                     filesFolder
-//                   )}/${currentFile.originalFilename}`;
+                  fs.writeFile(newPath, data, (err) => {
+                    if (err) {
+                      console.log(err);
+                    }
+                  });
+                });
+              }
+            }
 
-//                   fs.readFile(oldPath, (err, data) => {
-//                     if (err) {
-//                       console.log(err);
-//                     }
-
-//                     fs.writeFile(newPath, data, (err) => {
-//                       if (err) {
-//                         console.log(err);
-//                       }
-//                     });
-//                   });
-//                 }
-//               }
-
-//               res.sendStatus(200);
-//             }
-//           });
-//         });
-
-//         break;
-
-//       case 401:
-//         res.sendStatus(401);
-
-//         break;
-
-//       case 403:
-//         res.sendStatus(403);
-
-//         break;
-//     }
-//   }
-// );
+            res.sendStatus(200);
+          }
+        } catch (err) {
+          console.log(err);
+        }
+      }
+    );
+  }
+);
 
 // router.get(
 //   "/order/dispatchTime/:id",
