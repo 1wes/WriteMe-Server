@@ -6,7 +6,7 @@ import fs from "fs";
 import generateId from "../utils/generateId";
 import transporter from "../utils/mail";
 import envConfig from "../env-config";
-import { OrderDetails, Orders } from "../types/interface";
+import { Orders } from "../types/interface";
 import db from "../utils/prisma";
 
 const router = express.Router();
@@ -224,126 +224,104 @@ router.get("/all", verifyToken, async (req: Request, res: Response) => {
   }
 });
 
-// router.post("/new", verifyToken, (req: Request, res: Response) => {
-//   const { statusCode, tokenInfo } = req;
+router.post("/new", verifyToken, async(req: Request, res: Response) => {
+  const { tokenInfo } = req;
 
-//   switch (statusCode) {
-//     case 200:
-//       const form = new formidable.IncomingForm();
+  const form = new formidable.IncomingForm();
 
-//       const rootPath = path.dirname(__dirname);
+  const rootPath = path.dirname(__dirname);
 
-//       form.parse(req, (err, fields, files: formidable.Files) => {
-//         if (err) {
-//           console.log(err);
-//         }
+  form.parse(req, async(err, fields, files: formidable.Files) => {
+    if (err) {
+      console.log(err);
+    }
 
-//         const folder = `folder${generateId(100000)}`;
+    const folder = `folder${generateId(100000)}`;
 
-//         if (files.attachedFiles) {
-//           // create folder to store attached files
-//           fs.mkdir(path.join(rootPath, "public", "files", folder), (err) => {
-//             if (err) {
-//               console.log(err);
-//             }
-//           });
+    if (files.attachedFiles) {
+      // create folder to store attached files
+      fs.mkdir(path.join(rootPath, "public", "files", folder), (err) => {
+        if (err) {
+          console.log(err);
+        }
+      });
 
-//           for (let i = 0; i < files.attachedFiles.length; i++) {
-//             const file = files.attachedFiles[i];
+      for (let i = 0; i < files.attachedFiles.length; i++) {
+        const file = files.attachedFiles[i];
 
-//             const oldpath = file.filepath;
+        const oldpath = file.filepath;
 
-//             const newPath = `${path.join(
-//               rootPath,
-//               "public",
-//               "files",
-//               folder
-//             )}/${file.originalFilename}`;
+        const newPath = `${path.join(rootPath, "public", "files", folder)}/${
+          file.originalFilename
+        }`;
 
-//             // store the file in created folder
-//             fs.readFile(oldpath, (err, data) => {
-//               if (err) {
-//                 console.log(err);
-//               }
+        // store the file in created folder
+        fs.readFile(oldpath, (err, data) => {
+          if (err) {
+            console.log(err);
+          }
 
-//               fs.writeFile(newPath, data, (err) => {
-//                 if (err) {
-//                   console.log(err);
-//                 }
-//               });
-//             });
-//           }
-//         }
+          fs.writeFile(newPath, data, (err) => {
+            if (err) {
+              console.log(err);
+            }
+          });
+        });
+      }
+    }
 
-//         const {
-//           service,
-//           gradeLevel,
-//           subject,
-//           instructions,
-//           pagesOrwords,
-//           amount,
-//           deadline,
-//           time,
-//           sources,
-//           style,
-//           topic,
-//           language,
-//         } = fields as formidable.Fields;
+    const {
+      service,
+      gradeLevel,
+      subject,
+      instructions,
+      pagesOrwords,
+      amount,
+      deadline,
+      time,
+      sources,
+      style,
+      topic,
+      language,
+    } = fields as formidable.Fields;
 
-//         let orderId = generateId(100000000);
+    let orderId = generateId(100000000);
 
-//         let status = "Active";
+    // let status = "Active";
 
-//         let createdBy = tokenInfo?.uuid;
+    let createdBy = tokenInfo?.uuid;
 
-//         let newFiles = files.attachedFiles ? folder : "";
+    let newFiles = files.attachedFiles ? folder : "";
 
-//         let orderDetails: OrderDetails = [
-//           orderId,
-//           createdBy,
-//           service ? service[0] : "",
-//           subject ? subject[0] : "",
-//           gradeLevel ? gradeLevel[0] : "",
-//           style ? style[0] : "",
-//           language ? language[0] : "",
-//           sources ? sources[0] : "",
-//           newFiles,
-//           instructions ? instructions[0] : "",
-//           topic ? topic[0] : "",
-//           pagesOrwords ? pagesOrwords[0] : "",
-//           amount ? amount[0] : "",
-//           deadline ? deadline[0] : "",
-//           time ? time[0] : "",
-//           status,
-//         ];
+    try {
+      await db.order.create({
+        data: {
+          orderId: orderId,
+          createdBy: createdBy,
+          service: service?.[0]??"",
+          subject: subject?.[0]??"",
+          level: gradeLevel?.[0]??"",
+          refStyle: style?.[0]??"",
+          language: language?.[0]??"",
+          sources: sources?.[0]??"0",
+          files: newFiles,
+          instructions: instructions?.[0]??"",
+          topic: topic?.[0]??"",
+          wordsOrPages: pagesOrwords?.[0]??"",
+          amount: amount?.[0]??"",
+          dateDeadline: deadline?.[0]??"",
+          timeDeadline: time?.[0]??"",
+        }
+      });
 
-//         const createOrder =
-//           "INSERT INTO orders (order_id, created_by, service, subject, level, ref_style, language, sources, files, instructions, topic, words_or_pages, amount, date_deadline, time_deadline, status) VALUES (?)";
+      res.sendStatus(200);
+    } catch (err) {
+      console.log(err);
+    }
+  });
+});
 
-//         dbConnection.query(createOrder, [orderDetails], (err) => {
-//           if (err) {
-//             console.log(err);
-//           }
-
-//           res.sendStatus(200);
-//         });
-//       });
-//       break;
-
-//     case 401:
-//       res.sendStatus(401);
-
-//       break;
-
-//     case 403:
-//       res.sendStatus(403);
-
-//       break;
-//   }
-// });
-
-router.post("/revision", verifyToken, async(req: Request, res: Response) => {
-
+router.post("/revision", verifyToken, async (req: Request, res: Response) => {
   const { orderId, modificationType, modificationReason } = req.body;
 
   let modification_id = generateId(100000000);
@@ -356,13 +334,12 @@ router.post("/revision", verifyToken, async(req: Request, res: Response) => {
       data: {
         modificationId: modification_id,
         orderId: order_id,
-        modificationType:type,
-        reason:reason
-      }
-    })
+        modificationType: type,
+        reason: reason,
+      },
+    });
 
     res.sendStatus(200);
-    
   } catch (err) {
     console.log(err);
   }
