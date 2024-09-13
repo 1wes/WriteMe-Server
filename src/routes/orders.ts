@@ -582,49 +582,37 @@ router.put(
   }
 );
 
-// router.get(
-//   "/order/dispatchTime/:id",
-//   verifyToken,
-//   (req: Request, res: Response) => {
-//     const { statusCode } = req;
+router.get(
+  "/order/dispatchTime/:id",
+  verifyToken,
+  async (req: Request, res: Response) => {
+    try {
+      const getOrderSendTime = await db.sentOrder.findFirst({
+        where: {
+          orderId: req.params.id,
+        },
+        select: {
+          timestamp: true,
+        },
+      });
 
-//     switch (statusCode) {
-//       case 200:
-//         let getTime = `SELECT timestamp FROM sentOrders where order_id=?`;
-
-//         dbConnection.query(getTime, req.params.id, (err, result) => {
-//           if (err) {
-//             res.sendStatus(401);
-//           }
-
-//           if (result.length) {
-//             res.json({
-//               code: 200,
-//               message: result[0].timestamp,
-//             });
-//           } else {
-//             res.json({
-//               code: 404,
-//               message:
-//                 "This order has not yet been sent to you. Kindly wait until it is sent before you request a revision",
-//             });
-//           }
-//         });
-
-//         break;
-
-//       case 401:
-//         res.sendStatus(401);
-
-//         break;
-
-//       case 403:
-//         res.sendStatus(403);
-
-//         break;
-//     }
-//   }
-// );
+      if (getOrderSendTime) {
+        res.json({
+          code: 200,
+          message: getOrderSendTime.timestamp,
+        });
+      } else {
+        res.json({
+          code: 404,
+          message:
+            "This order has not yet been sent to you. Kindly wait until it is sent before you request a revision",
+        });
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  }
+);
 
 router.post("/cancel-order", verifyToken, (req: Request, res: Response) => {
   // order cancellation logic
