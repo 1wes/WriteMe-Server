@@ -6,25 +6,6 @@ export default interface EnvConfig {
   password: string;
 }
 
-export type OrderDetails = [
-  string, // orderId
-  number, // createdBy
-  string, // service
-  string, // subject
-  string, // gradeLevel
-  string, // style
-  string, // language
-  string, // sources
-  string, // newFiles
-  string, // instructions
-  string, // topic
-  string, // pagesOrwords
-  string, // amount
-  string, // deadline
-  string, // time
-  string // status
-];
-
 export interface Orders {
   username: string;
   totalOrders: number;
