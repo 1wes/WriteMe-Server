@@ -13,7 +13,7 @@ const { port, client_origin } = config;
 app.use(express.json());
 app.use(express.urlencoded({extended:true as boolean}));
 app.use(cors({
-    origin:client_origin as string,
+    origin:[client_origin as string, "https://writeme-br63.onrender.com"],
     credentials:true as boolean
 }));
 app.use(cookieParser());
