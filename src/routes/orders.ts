@@ -224,14 +224,14 @@ router.get("/all", verifyToken, async (req: Request, res: Response) => {
   }
 });
 
-router.post("/new", verifyToken, async(req: Request, res: Response) => {
+router.post("/new", verifyToken, async (req: Request, res: Response) => {
   const { tokenInfo } = req;
 
   const form = new formidable.IncomingForm();
 
   const rootPath = path.dirname(__dirname);
 
-  form.parse(req, async(err, fields, files: formidable.Files) => {
+  form.parse(req, async (err, fields, files: formidable.Files) => {
     if (err) {
       console.log(err);
     }
@@ -298,20 +298,20 @@ router.post("/new", verifyToken, async(req: Request, res: Response) => {
         data: {
           orderId: orderId,
           createdBy: createdBy,
-          service: service?.[0]??"",
-          subject: subject?.[0]??"",
-          level: gradeLevel?.[0]??"",
-          refStyle: style?.[0]??"",
-          language: language?.[0]??"",
-          sources: sources?.[0]??"0",
+          service: service?.[0] ?? "",
+          subject: subject?.[0] ?? "",
+          level: gradeLevel?.[0] ?? "",
+          refStyle: style?.[0] ?? "",
+          language: language?.[0] ?? "",
+          sources: sources?.[0] ?? "0",
           files: newFiles,
-          instructions: instructions?.[0]??"",
-          topic: topic?.[0]??"",
-          wordsOrPages: pagesOrwords?.[0]??"",
-          amount: amount?.[0]??"",
-          dateDeadline: deadline?.[0]??"",
-          timeDeadline: time?.[0]??"",
-        }
+          instructions: instructions?.[0] ?? "",
+          topic: topic?.[0] ?? "",
+          wordsOrPages: pagesOrwords?.[0] ?? "",
+          amount: amount?.[0] ?? "",
+          dateDeadline: deadline?.[0] ?? "",
+          timeDeadline: time?.[0] ?? "",
+        },
       });
 
       res.sendStatus(200);
@@ -345,147 +345,128 @@ router.post("/revision", verifyToken, async (req: Request, res: Response) => {
   }
 });
 
-// router.post("/order/send/:id/", verifyToken, (req: Request, res: Response) => {
-//   const { statusCode, tokenInfo } = req;
+router.post("/order/send/:id/", verifyToken, (req: Request, res: Response) => {
+  const { tokenInfo } = req;
 
-//   const revisionGracePeriod = (dispatchTime: Date): number => {
-//     const gracePeriod = dispatchTime.getTime() + 1000 * 3600 * 24 * 7;
+  const revisionGracePeriod = (dispatchTime: Date): number => {
+    const gracePeriod = dispatchTime.getTime() + 1000 * 3600 * 24 * 7;
 
-//     return gracePeriod;
-//   };
+    return gracePeriod;
+  };
 
-//   switch (statusCode) {
-//     case 200:
-//       if (tokenInfo.role === "Admin") {
-//         const form = new formidable.IncomingForm();
+  if (tokenInfo.role === "Admin") {
+    const form = new formidable.IncomingForm();
 
-//         const rootPath = path.dirname(__dirname);
+    const rootPath = path.dirname(__dirname);
 
-//         form.parse(
-//           req,
-//           (err, fields: formidable.Fields, files: formidable.Files) => {
-//             if (err) {
-//               console.log(err);
-//             }
+    form.parse(
+      req,
+      (err, fields: formidable.Fields, files: formidable.Files) => {
+        if (err) {
+          console.log(err);
+        }
 
-//             const folder = `folder${generateId(100000)}`;
+        const folder = `folder${generateId(100000)}`;
 
-//             fs.mkdir(path.join(rootPath, "public", "files", folder), (err) => {
-//               if (err) {
-//                 console.log(err);
-//               }
-//             });
+        fs.mkdir(path.join(rootPath, "public", "files", folder), (err) => {
+          if (err) {
+            console.log(err);
+          }
+        });
 
-//             // check whether there documents are an array
-//             if (files && Array.isArray(files.documents)) {
-//               for (let i = 0; i < files.documents.length; i++) {
-//                 const file = files.documents[i];
+        // check whether the documents are an array
+        if (files && Array.isArray(files.documents)) {
+          for (let i = 0; i < files.documents.length; i++) {
+            const file = files.documents[i];
 
-//                 const oldpath = file.filepath;
+            const oldpath = file.filepath;
 
-//                 const newPath = `${path.join(
-//                   rootPath,
-//                   "public",
-//                   "files",
-//                   folder
-//                 )}/${file.originalFilename}`;
+            const newPath = `${path.join(
+              rootPath,
+              "public",
+              "files",
+              folder
+            )}/${file.originalFilename}`;
 
-//                 fs.readFile(oldpath, (err, data) => {
-//                   if (err) {
-//                     console.log(err);
-//                   }
+            fs.readFile(oldpath, (err, data) => {
+              if (err) {
+                console.log(err);
+              }
 
-//                   fs.writeFile(newPath, data, (err) => {
-//                     if (err) {
-//                       console.log(err);
-//                     }
-//                   });
-//                 });
-//               }
-//             }
+              fs.writeFile(newPath, data, (err) => {
+                if (err) {
+                  console.log(err);
+                }
+              });
+            });
+          }
+        }
 
-//             const { email, id, topic, additionalInfo, fileNames } = fields;
+        const { email, id, topic, additionalInfo, fileNames } = fields;
 
-//             const attachments = [];
+        const attachments = [];
 
-//             // assert that fileNames is an array
-//             if (fileNames && Array.isArray(fileNames)) {
-//               for (let i = 0; i < fileNames?.length; i++) {
-//                 attachments.push({
-//                   filename: fileNames[i],
-//                   path: `${path.join(rootPath, "public", "files", folder)}/${
-//                     fileNames[i]
-//                   }`,
-//                 });
-//               }
-//             }
+        // assert that fileNames is an array
+        if (fileNames && Array.isArray(fileNames)) {
+          for (let i = 0; i < fileNames?.length; i++) {
+            attachments.push({
+              filename: fileNames[i],
+              path: `${path.join(rootPath, "public", "files", folder)}/${
+                fileNames[i]
+              }`,
+            });
+          }
+        }
 
-//             const dispatchTime = new Date(Date.now());
+        const dispatchTime = new Date(Date.now());
 
-//             const gracePeriod = revisionGracePeriod(dispatchTime);
+        const gracePeriod = revisionGracePeriod(dispatchTime);
 
-//             const mailOptions = {
-//               from: senderEmail,
-//               to: email?.[0],
-//               subject: `Order${id?.[0]} - ${topic?.[0]}`,
-//               text: `Dear customer, the above referenced order has been completed and is attached in this mail. Kindly go through it to
-//                         confirm that it meets your requirements and standards. Incase of any changes, you have up to 7 days (${new Date(
-//                           gracePeriod
-//                         ).toUTCString()})
-//                         to request a revision, for free. Please note that at the elapse of this period (7 days), you will no longer be able to request a revision for this work. ${
-//                           additionalInfo?.[0] === "" ? "" : additionalInfo?.[0]
-//                         }`,
-//               attachments: attachments,
-//             };
+        const mailOptions = {
+          from: senderEmail,
+          to: email?.[0],
+          subject: `Order${id?.[0]} - ${topic?.[0]}`,
+          text: `Dear customer, the above referenced order has been completed and is attached in this mail. Kindly go through it to
+                        confirm that it meets your requirements and standards. Incase of any changes, you have up to 7 days (${new Date(
+                          gracePeriod
+                        ).toUTCString()})
+                        to request a revision, for free. Please note that at the elapse of this period (7 days), you will no longer be able to request a revision for this work. ${
+                          additionalInfo?.[0] === "" ? "" : additionalInfo?.[0]
+                        }`,
+          attachments: attachments,
+        };
 
-//             transporter.sendMail(mailOptions, (err, info) => {
-//               if (err) {
-//                 console.log(err);
-//               } else {
-//                 const insert = `INSERT INTO sentOrders (transaction_id, order_id, files, additionalMessage, timestamp) VALUES (?)`;
+        transporter.sendMail(mailOptions, async (err, info) => {
+          if (err) {
+            console.log(err);
+            return;
+          }
 
-//                 const transactionId = generateId(100000);
+          const transactionId = generateId(100000);
 
-//                 const sentOrderDetails = [
-//                   transactionId,
-//                   id?.[0],
-//                   folder,
-//                   additionalInfo?.[0],
-//                   dispatchTime,
-//                 ];
+          try {
+            await db.sentOrder.create({
+              data: {
+                transactionId: transactionId,
+                orderId: id?.[0]??"",
+                files: folder,
+                additionalMessage: additionalInfo?.[0],
+                timestamp:dispatchTime
+              }
+            });
 
-//                 dbConnection.query(
-//                   insert,
-//                   [sentOrderDetails],
-//                   (err, result) => {
-//                     if (err) {
-//                       console.log(err);
-//                     }
-
-//                     res.sendStatus(200);
-//                   }
-//                 );
-//               }
-//             });
-//           }
-//         );
-//       } else {
-//         res.sendStatus(401);
-//       }
-
-//       break;
-
-//     case 401:
-//       res.sendStatus(401);
-
-//       break;
-
-//     case 403:
-//       res.sendStatus(403);
-
-//       break;
-//   }
-// });
+            res.sendStatus(200);
+            
+          } catch (err) {
+            console.log(err)
+          }
+        });
+      }
+    );
+  } else {
+    res.sendStatus(401);
+  }
+});
 
 // router.put(
 //   "/order/update/files/:id",
